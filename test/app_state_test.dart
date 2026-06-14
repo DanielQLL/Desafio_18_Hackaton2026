@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_application_1/models/app_state.dart';
+import 'package:banco_de_la_nacion_app/models/app_state.dart';
 
 void main() {
   test('AppState can speak without web-only dependencies', () {

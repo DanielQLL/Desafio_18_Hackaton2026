@@ -43,3 +43,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+
+# Platforms not used in this project
+/ios/
+/macos/
+/linux/
+/windows/
+/web/
+
+# Analysis and local files
+analysis.txt
+manual_cliente.md
+*.md
+!README.md

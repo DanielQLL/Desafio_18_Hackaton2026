@@ -85,15 +85,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                     ],
                   ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "BN",
-                    style: TextStyle(
-                      color: kBnRed,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 44,
-                      letterSpacing: -1,
-                    ),
+                  padding: const EdgeInsets.all(16),
+                  child: Image.asset(
+                    'assets/images/bn_logo.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),

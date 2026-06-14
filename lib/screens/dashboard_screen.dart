@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:math';
 import '../models/app_state.dart';
+import '../services/voice_service.dart';
 import 'components.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -42,27 +43,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
-                    "BN",
-                    style: TextStyle(
-                      color: kBnRed,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  "Banco de la Nación",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
+                  child: Image.asset(
+                    'assets/images/bn_logo.png',
+                    height: 28,
+                    width: 130,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ],
@@ -80,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Switch(
                     value: state.simpleModeEnabled,
                     onChanged: (val) => state.toggleSimpleMode(),
-                    activeColor: Colors.greenAccent,
+                    activeThumbColor: Colors.greenAccent,
                     activeTrackColor: Colors.white30,
                     inactiveThumbColor: Colors.white70,
                     inactiveTrackColor: Colors.white24,
@@ -430,7 +420,7 @@ class _HomeTabState extends State<HomeTab> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))
                           ],
                         ),
                         child: Column(
@@ -480,7 +470,7 @@ class _HomeTabState extends State<HomeTab> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))
                             ],
                           ),
                           child: const Row(
@@ -661,7 +651,7 @@ class _HomeTabState extends State<HomeTab> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
@@ -734,14 +724,15 @@ class _HomeTabState extends State<HomeTab> {
                                   Icon(Icons.qr_code, size: 160, color: Colors.grey[900]),
                                   // Center logo
                                   Container(
-                                    padding: const EdgeInsets.all(4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: const Text(
-                                      "BN",
-                                      style: TextStyle(color: kBnRed, fontWeight: FontWeight.bold, fontSize: 10),
+                                    child: Image.asset(
+                                      'assets/images/bn_logo.png',
+                                      height: 12,
+                                      fit: BoxFit.contain,
                                     ),
                                   )
                                 ],
@@ -800,7 +791,7 @@ class _HomeTabState extends State<HomeTab> {
                               width: 160,
                               height: 160,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: kBnRed, width: 2),
                               ),
@@ -856,16 +847,15 @@ class _OperationsTabState extends State<OperationsTab> {
   
   @override
   Widget build(BuildContext context) {
-    final state = Provider.of<AppState>(context);
-    
     // Back handler
     Widget wrapFlow(Widget flowWidget, String title) {
-      return WillPopScope(
-        onWillPop: () async {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
           setState(() {
             _activeFlow = "menu";
           });
-          return false;
         },
         child: Scaffold(
           appBar: AppBar(
@@ -1064,7 +1054,7 @@ class CategoryHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: color.withOpacity(0.9),
+              color: color.withValues(alpha: 0.9),
               letterSpacing: 0.8,
             ),
           ),
@@ -1218,7 +1208,7 @@ class _SecurityTabState extends State<SecurityTab> {
               SwitchListTile(
                 title: const Text("Compras por Internet", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                 subtitle: const Text("Permitir compras en páginas web y apps", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
+                activeThumbColor: kBnRed,
                 value: state.isInternetPurchasesEnabled,
                 onChanged: (val) {
                   state.toggleCardSetting('internet');
@@ -1228,7 +1218,7 @@ class _SecurityTabState extends State<SecurityTab> {
               SwitchListTile(
                 title: const Text("Consumo en el extranjero", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                 subtitle: const Text("Habilita compras y retiros fuera del Perú", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
+                activeThumbColor: kBnRed,
                 value: state.isForeignConsumptionEnabled,
                 onChanged: (val) {
                   state.toggleCardSetting('foreign');
@@ -1238,7 +1228,7 @@ class _SecurityTabState extends State<SecurityTab> {
               SwitchListTile(
                 title: const Text("Transferencias y Retiros", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                 subtitle: const Text("Permite transacciones interbancarias y cajeros", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
+                activeThumbColor: kBnRed,
                 value: state.isTransfersEnabled,
                 onChanged: (val) {
                   state.toggleCardSetting('transfers');
@@ -1248,7 +1238,7 @@ class _SecurityTabState extends State<SecurityTab> {
               SwitchListTile(
                 title: const Text("Notificaciones de Transacción", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                 subtitle: const Text("Recibe notificaciones en tiempo real por cada consumo", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
+                activeThumbColor: kBnRed,
                 value: state.isNotificationsEnabled,
                 onChanged: (val) {
                   state.toggleCardSetting('notifications');
@@ -1258,7 +1248,7 @@ class _SecurityTabState extends State<SecurityTab> {
               SwitchListTile(
                 title: const Text("Afiliado a Transferencias por Celular", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                 subtitle: const Text("Permite recibir y enviar dinero vía Yape/Plin", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
+                activeThumbColor: kBnRed,
                 value: state.isCellularTransferAffiliated,
                 onChanged: (val) {
                   showDialog(
@@ -1319,7 +1309,7 @@ class ProfileTab extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: kBnRed.withOpacity(0.1),
+                  backgroundColor: kBnRed.withValues(alpha: 0.1),
                   child: const Text(
                     "JA",
                     style: TextStyle(color: kBnRed, fontWeight: FontWeight.bold, fontSize: 22),
@@ -1455,7 +1445,7 @@ class ProfileTab extends StatelessWidget {
                     const Text("Operador Móvil", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
-                      value: selectedCarrier,
+                      initialValue: selectedCarrier,
                       items: ["Movistar", "Claro", "Entel", "Bitel"].map((c) {
                         return DropdownMenuItem(value: c, child: Text(c));
                       }).toList(),
@@ -2071,7 +2061,7 @@ class _TransferCellularFlowState extends State<TransferCellularFlow> {
                   padding: const EdgeInsets.only(right: 12.0),
                   child: ActionChip(
                     avatar: CircleAvatar(
-                      backgroundColor: kBnRed.withOpacity(0.1),
+                      backgroundColor: kBnRed.withValues(alpha: 0.1),
                       child: Text(c["name"]!.substring(0, 1), style: const TextStyle(color: kBnRed, fontSize: 11)),
                     ),
                     label: Column(
@@ -2118,7 +2108,7 @@ class _TransferCellularFlowState extends State<TransferCellularFlow> {
           const Text("Destino de Billetera / Banco", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _selectedBank,
+            initialValue: _selectedBank,
             items: ["Yape", "Plin", "Banco de la Nación", "BCP", "Interbank", "BBVA", "Scotiabank"].map((b) {
               return DropdownMenuItem(value: b, child: Text(b));
             }).toList(),
@@ -2276,7 +2266,7 @@ class _TransferInterbankFlowState extends State<TransferInterbankFlow> {
                 child: ChoiceChip(
                   label: const Text("Inmediata (24h)"),
                   selected: _isInmediate,
-                  selectedColor: kBnRed.withOpacity(0.15),
+                  selectedColor: kBnRed.withValues(alpha: 0.15),
                   labelStyle: TextStyle(color: _isInmediate ? kBnRed : kBnTextDark, fontWeight: FontWeight.bold, fontSize: 12),
                   onSelected: (val) => setState(() => _isInmediate = true),
                 ),
@@ -2286,7 +2276,7 @@ class _TransferInterbankFlowState extends State<TransferInterbankFlow> {
                 child: ChoiceChip(
                   label: const Text("Diferida (Gratis < 500)"),
                   selected: !_isInmediate,
-                  selectedColor: kBnRed.withOpacity(0.15),
+                  selectedColor: kBnRed.withValues(alpha: 0.15),
                   labelStyle: TextStyle(color: !_isInmediate ? kBnRed : kBnTextDark, fontWeight: FontWeight.bold, fontSize: 12),
                   onSelected: (val) => setState(() => _isInmediate = false),
                 ),
@@ -2365,7 +2355,7 @@ class _PayCreditCardFlowState extends State<PayCreditCardFlow> {
           const Text("Banco Emisor", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _selectedBank,
+            initialValue: _selectedBank,
             items: ["BCP", "BBVA", "Interbank", "Scotiabank", "Banco Falabella", "Banco Ripley"].map((b) {
               return DropdownMenuItem(value: b, child: Text(b));
             }).toList(),
@@ -2521,7 +2511,7 @@ class _PayServiceFlowState extends State<PayServiceFlow> {
           Text("Empresa Proveedora", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _selectedCompany,
+            initialValue: _selectedCompany,
             items: _companies[widget.serviceType]!.map((c) {
               return DropdownMenuItem(value: c, child: Text(c));
             }).toList(),
@@ -2669,7 +2659,7 @@ class _RechargeFlowState extends State<RechargeFlow> {
           const Text("Operador Móvil", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _selectedOperator,
+            initialValue: _selectedOperator,
             items: ["Movistar", "Claro", "Entel", "Bitel"].map((op) {
               return DropdownMenuItem(value: op, child: Text(op));
             }).toList(),
@@ -3176,6 +3166,8 @@ class _SimpleDashboardViewState extends State<SimpleDashboardView> {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
+    final voiceService = Provider.of<VoiceService>(context);
+    final lang = state.currentLanguage;
 
     // Sub flows when clicked
     if (_activeSimpleFlow != null) {
@@ -3210,151 +3202,122 @@ class _SimpleDashboardViewState extends State<SimpleDashboardView> {
         title = "Retiro sin Tarjeta";
       }
 
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F4F5),
+        floatingActionButton: _MicFAB(voiceService: voiceService, lang: lang),
+        body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kBnRed,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kBnRed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  state.speak(lang == 'ES' ? "Regresando al menú simple" : "Kutichkani menu simplicitaman");
+                  setState(() { _activeSimpleFlow = null; });
+                },
+                icon: const Icon(Icons.arrow_back),
+                label: Text("VOLVER / KUTIY", style: TextStyle(fontSize: 16 * state.fontSizeMultiplier, fontWeight: FontWeight.bold)),
               ),
-              onPressed: () {
-                state.speak(state.currentLanguage == 'ES' ? "Regresando al menú simple" : "Kutichkani menu simplicitaman");
-                setState(() {
-                  _activeSimpleFlow = null;
-                });
-              },
-              icon: const Icon(Icons.arrow_back),
-              label: Text("VOLVER / KUTIY", style: TextStyle(fontSize: 16 * state.fontSizeMultiplier, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: TextStyle(fontSize: 18 * state.fontSizeMultiplier, fontWeight: FontWeight.bold, color: kBnRed),
-              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: SingleChildScrollView(
-                child: flowWidget,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                title,
+                style: TextStyle(fontSize: 18 * state.fontSizeMultiplier, fontWeight: FontWeight.bold, color: kBnRed),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(height: 8),
+            Expanded(child: flowWidget),
           ],
         ),
       );
     }
 
     // Main simple menu grid
-    return SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F4F5),
+      floatingActionButton: _MicFAB(voiceService: voiceService, lang: lang),
+      body: SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // LANGUAGE SELECTORS BAR
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.currentLanguage == 'ES' ? kBnRed : Colors.white,
-                      foregroundColor: state.currentLanguage == 'ES' ? Colors.white : kBnRed,
-                      side: const BorderSide(color: kBnRed),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setLanguage('ES'),
-                    child: Text("ESPAÑOL", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * state.fontSizeMultiplier)),
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                _buildSegmentButton(
+                  label: "ESPAÑOL",
+                  isSelected: state.currentLanguage == 'ES',
+                  onTap: () => state.setLanguage('ES'),
+                  state: state,
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.currentLanguage == 'QU' ? kBnRed : Colors.white,
-                      foregroundColor: state.currentLanguage == 'QU' ? Colors.white : kBnRed,
-                      side: const BorderSide(color: kBnRed),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setLanguage('QU'),
-                    child: Text("QUECHUA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * state.fontSizeMultiplier)),
-                  ),
+                _buildSegmentButton(
+                  label: "QUECHUA",
+                  isSelected: state.currentLanguage == 'QU',
+                  onTap: () => state.setLanguage('QU'),
+                  state: state,
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.currentLanguage == 'AY' ? kBnRed : Colors.white,
-                      foregroundColor: state.currentLanguage == 'AY' ? Colors.white : kBnRed,
-                      side: const BorderSide(color: kBnRed),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setLanguage('AY'),
-                    child: Text("AYMARA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * state.fontSizeMultiplier)),
-                  ),
+                _buildSegmentButton(
+                  label: "AYMARA",
+                  isSelected: state.currentLanguage == 'AY',
+                  onTap: () => state.setLanguage('AY'),
+                  state: state,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
 
           // FONT SIZE BAR (Normal | Grande | Muy Grande)
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.fontSizeMultiplier == 1.0 ? Colors.black87 : Colors.white,
-                      foregroundColor: state.fontSizeMultiplier == 1.0 ? Colors.white : Colors.black87,
-                      side: const BorderSide(color: Colors.black87),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setFontSizeMultiplier(1.0),
-                    child: const Text("NORMAL", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                _buildSegmentButton(
+                  label: "NORMAL",
+                  isSelected: state.fontSizeMultiplier == 1.0,
+                  onTap: () => state.setFontSizeMultiplier(1.0),
+                  state: state,
+                  selectedColor: Colors.black87,
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.fontSizeMultiplier == 1.3 ? Colors.black87 : Colors.white,
-                      foregroundColor: state.fontSizeMultiplier == 1.3 ? Colors.white : Colors.black87,
-                      side: const BorderSide(color: Colors.black87),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setFontSizeMultiplier(1.3),
-                    child: const Text("GRANDE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
+                _buildSegmentButton(
+                  label: "GRANDE",
+                  isSelected: state.fontSizeMultiplier == 1.3,
+                  onTap: () => state.setFontSizeMultiplier(1.3),
+                  state: state,
+                  selectedColor: Colors.black87,
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.fontSizeMultiplier == 1.6 ? Colors.black87 : Colors.white,
-                      foregroundColor: state.fontSizeMultiplier == 1.6 ? Colors.white : Colors.black87,
-                      side: const BorderSide(color: Colors.black87),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setFontSizeMultiplier(1.6),
-                    child: const Text("MUY GRANDE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
+                _buildSegmentButton(
+                  label: "MUY GRANDE",
+                  isSelected: state.fontSizeMultiplier == 1.6,
+                  onTap: () => state.setFontSizeMultiplier(1.6),
+                  state: state,
+                  selectedColor: Colors.black87,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -3487,10 +3450,10 @@ class _SimpleDashboardViewState extends State<SimpleDashboardView> {
             },
             state: state,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 80), // padding for FAB
         ],
       ),
-    );
+    )); // closes SingleChildScrollView (body) + Scaffold
   }
 
   Widget _simpleRectButton({
@@ -3500,13 +3463,53 @@ class _SimpleDashboardViewState extends State<SimpleDashboardView> {
     required VoidCallback onTap,
     required AppState state,
   }) {
+    List<Color> gradientColors;
+    if (color == Colors.teal.shade800) {
+      gradientColors = [const Color(0xFF14B8A6), const Color(0xFF0F766E)];
+    } else if (color == Colors.blue.shade800) {
+      gradientColors = [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)];
+    } else if (color == Colors.indigo.shade800) {
+      gradientColors = [const Color(0xFF6366F1), const Color(0xFF4338CA)];
+    } else if (color == Colors.purple.shade800) {
+      gradientColors = [const Color(0xFFA855F7), const Color(0xFF7E22CE)];
+    } else if (color == Colors.cyan.shade800) {
+      gradientColors = [const Color(0xFF06B6D4), const Color(0xFF0891B2)];
+    } else if (color == Colors.amber.shade900) {
+      gradientColors = [const Color(0xFFF59E0B), const Color(0xFFD97706)];
+    } else if (color == Colors.green.shade800) {
+      gradientColors = [const Color(0xFF22C55E), const Color(0xFF15803D)];
+    } else if (color == Colors.deepOrange.shade800) {
+      gradientColors = [const Color(0xFFF97316), const Color(0xFFC2410C)];
+    } else if (color == Colors.blueGrey.shade800) {
+      gradientColors = [const Color(0xFF64748B), const Color(0xFF475569)];
+    } else if (color == kBnRed) {
+      gradientColors = [const Color(0xFFEF4444), const Color(0xFFB91C1C)];
+    } else {
+      gradientColors = [color, color.withValues(alpha: 0.8)];
+    }
+
     return Container(
       height: 90,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors[1].withValues(alpha: 0.35),
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          elevation: 4,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
@@ -3514,12 +3517,12 @@ class _SimpleDashboardViewState extends State<SimpleDashboardView> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Colors.white24,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Colors.white, size: 32),
+              child: Icon(icon, color: Colors.white, size: 30),
             ),
             const SizedBox(width: 20),
             Expanded(
@@ -3527,13 +3530,54 @@ class _SimpleDashboardViewState extends State<SimpleDashboardView> {
                 label,
                 style: TextStyle(
                   fontSize: 15 * state.fontSizeMultiplier,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
+                  color: Colors.white,
                 ),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 20),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSegmentButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required AppState state,
+    Color selectedColor = kBnRed,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? selectedColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: selectedColor.withValues(alpha: 0.25),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12 * state.fontSizeMultiplier,
+              color: isSelected ? Colors.white : Colors.grey.shade700,
+            ),
+          ),
         ),
       ),
     );
@@ -3546,8 +3590,8 @@ class _SimpleSaldosView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
         // Balance card
         Card(
@@ -3619,6 +3663,56 @@ class _SimpleSaldosView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Floating Action Button de micrófono para el Modo Simple autenticado.
+class _MicFAB extends StatefulWidget {
+  final VoiceService voiceService;
+  final String lang;
+
+  const _MicFAB({required this.voiceService, required this.lang});
+
+  @override
+  State<_MicFAB> createState() => _MicFABState();
+}
+
+class _MicFABState extends State<_MicFAB> {
+  @override
+  Widget build(BuildContext context) {
+    final isListening = widget.voiceService.isListening;
+
+    return GestureDetector(
+      onTap: () {
+        if (isListening) {
+          widget.voiceService.stopListeningManual();
+        } else {
+          widget.voiceService.startListening(context);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: isListening ? 64 : 56,
+        height: isListening ? 64 : 56,
+        decoration: BoxDecoration(
+          color: isListening ? Colors.green : const Color(0xFFC8102E),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: (isListening ? Colors.green : const Color(0xFFC8102E)).withValues(alpha: 0.4),
+              blurRadius: isListening ? 24 : 12,
+              spreadRadius: isListening ? 4 : 2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          isListening ? Icons.mic_none_rounded : Icons.mic_rounded,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
     );
   }
 }

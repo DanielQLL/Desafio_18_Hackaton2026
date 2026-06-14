@@ -7,7 +7,7 @@ class SpeechHelper {
     try {
       await _tts.setLanguage('es-PE');
       await _tts.setPitch(1.0);
-      await _tts.setSpeechRate(0.2);
+      await _tts.setSpeechRate(0.5);
       await _tts.setVolume(1.0);
       await _tts.speak(text);
     } catch (_) {

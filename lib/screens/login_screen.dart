@@ -82,35 +82,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const SizedBox(height: 40),
-                            // Top Logo
+                            // Logo oficial BN
                             Center(
-                              child: Container(
-                                width: 70,
-                                height: 70,
-                                decoration: const BoxDecoration(
-                                  color: kBnRed,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: const Text(
-                                  "BN",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 28,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            const Center(
-                              child: Text(
-                                "Banco de la Nación",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: kBnRed,
-                                ),
+                              child: Image.asset(
+                                'assets/images/bn_logo.png',
+                                height: 56,
                               ),
                             ),
                             Center(
@@ -233,7 +209,90 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ],
                             ),
-                            
+
+                            const SizedBox(height: 20),
+
+                            // ============================================
+                            // MÓDULO INCLUSIVO — Botón de Asistente de Voz
+                            // ============================================
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF1A237E), Color(0xFF283593)],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF1A237E).withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () {
+                                    state.speak(
+                                      'Abriendo el Asistente de Voz. Modo de ayuda para adultos mayores.',
+                                      force: true,
+                                    );
+                                    Navigator.pushNamed(context, '/inclusive/language');
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.15),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.record_voice_over_rounded,
+                                            color: Colors.white,
+                                            size: 26,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        const Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Ingresar con Asistente de Voz',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                'Para adultos mayores · Quechua · Aymara',
+                                                style: TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 11.5,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+
                             const Spacer(),
                             
                             // Bottom utilities: Ubícanos & Soporte 24h

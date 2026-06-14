@@ -31,7 +31,6 @@ class BnButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
-    final theme = Theme.of(context);
     return SizedBox(
       width: double.infinity,
       height: 52,
@@ -611,7 +610,7 @@ class AccessibilityFloatingButton extends StatelessWidget {
                     ),
                     trailing: Switch(
                       value: state.fontSizeMultiplier > 1.0,
-                      activeColor: kBnRed,
+                      activeThumbColor: kBnRed,
                       onChanged: (val) {
                         state.toggleFontSize();
                         setSheetState(() {});
@@ -629,7 +628,7 @@ class AccessibilityFloatingButton extends StatelessWidget {
                     ),
                     trailing: Switch(
                       value: state.ttsEnabled,
-                      activeColor: kBnRed,
+                      activeThumbColor: kBnRed,
                       onChanged: (val) {
                         state.toggleTts();
                         setSheetState(() {});
@@ -637,23 +636,21 @@ class AccessibilityFloatingButton extends StatelessWidget {
                     ),
                   ),
                   
-                  // Language selector
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                    child: Text(
-                      "Idioma de Aplicación / Simi / Aru:",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kBnTextDark),
+                  // Modo simplificado
+                  ListTile(
+                    leading: const Icon(Icons.view_agenda_rounded, color: kBnRed),
+                    title: const Text("Modo Simplificado", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text(
+                      state.simpleModeEnabled ? "Vista simplificada activa" : "Vista completa",
+                      style: const TextStyle(fontSize: 12),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _langButton(context, state, "Español", "ES", setSheetState),
-                        _langButton(context, state, "Quechua", "QU", setSheetState),
-                        _langButton(context, state, "Aymara", "AY", setSheetState),
-                      ],
+                    trailing: Switch(
+                      value: state.simpleModeEnabled,
+                      activeThumbColor: kBnRed,
+                      onChanged: (val) {
+                        state.toggleSimpleMode();
+                        setSheetState(() {});
+                      },
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -662,36 +659,6 @@ class AccessibilityFloatingButton extends StatelessWidget {
             );
           },
         );
-      },
-    );
-  }
-
-  Widget _langButton(
-    BuildContext context,
-    AppState state,
-    String label,
-    String code,
-    StateSetter setSheetState,
-  ) {
-    bool isSelected = state.currentLanguage == code;
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : kBnTextDark,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-      ),
-      selected: isSelected,
-      selectedColor: kBnRed,
-      backgroundColor: Colors.grey[200],
-      checkmarkColor: Colors.white,
-      onSelected: (val) {
-        if (val) {
-          state.setLanguage(code);
-          setSheetState(() {});
-        }
       },
     );
   }
@@ -715,7 +682,7 @@ class VoiceNarrationOverlay extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.85),
+            color: Colors.black.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 4))
