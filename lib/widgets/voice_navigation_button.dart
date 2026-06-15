@@ -180,9 +180,7 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
           setState(() => _lastWords = result.recognizedWords);
         }
       },
-      listenFor: const Duration(seconds: 10),
-      pauseFor: const Duration(seconds: 3),
-      localeId: 'es-ES', // Standardize to es-ES for Web compatibility
+      // localeId: 'es-ES', // Removed to use browser's native default language
       partialResults: true,
       cancelOnError: false,
     );
@@ -390,10 +388,11 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
             ),
           ),
 
-        Listener(
-          onPointerDown: (_) => _startListening(),
-          onPointerUp: (_) => _stopListening(),
-          onPointerCancel: (_) => _stopListening(),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => _startListening(),
+          onTapUp: (_) => _stopListening(),
+          onTapCancel: () => _stopListening(),
           child: AnimatedBuilder(
             animation: _pulseAnimation,
             builder: (_, child) {
