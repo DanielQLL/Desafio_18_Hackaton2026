@@ -180,7 +180,7 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
           });
         }
       },
-      localeId: 'es-US',
+      // localeId: 'es-US', // Removed to let the browser use its native default, avoiding "network" errors
       partialResults: false, // Turn off partial to see if final works better on web
       cancelOnError: true,
     );
