@@ -178,7 +178,7 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
           setState(() => _lastWords = result.recognizedWords);
         }
       },
-      localeId: 'es-PE',
+      localeId: 'es-US', // es-US is universally supported by Chrome Web Speech API
       partialResults: true,
       cancelOnError: true,
     );
