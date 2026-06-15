@@ -109,9 +109,7 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
       setState(() {
         _isListening = false;
         _pulseController.stop();
-        if (error.permanent) {
-          _errorText = 'Error: ${error.errorMsg}';
-        }
+        _errorText = 'Error: ${error.errorMsg}';
       });
       // If we got some words before the error, still process them
       if (_lastWords.isNotEmpty) {
@@ -180,9 +178,9 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
           setState(() => _lastWords = result.recognizedWords);
         }
       },
-      // localeId: 'es-ES', // Removed to use browser's native default language
+      localeId: 'es-PE',
       partialResults: true,
-      cancelOnError: false,
+      cancelOnError: true,
     );
   }
 
