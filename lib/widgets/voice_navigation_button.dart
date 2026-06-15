@@ -173,13 +173,15 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
 
     await _speech.listen(
       onResult: (result) {
-        dev.log('STT result: "${result.recognizedWords}" final=${result.finalResult}');
-        if (mounted && !_isProcessing) {
-          setState(() => _lastWords = result.recognizedWords);
+        if (mounted) {
+          setState(() {
+            _lastWords = result.recognizedWords;
+            _statusText = 'Oigo: ${result.recognizedWords}';
+          });
         }
       },
-      localeId: 'es-US', // es-US is universally supported by Chrome Web Speech API
-      partialResults: true,
+      localeId: 'es-US',
+      partialResults: false, // Turn off partial to see if final works better on web
       cancelOnError: true,
     );
   }
@@ -188,7 +190,10 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
     if (!_isListening) return;
     _speech.stop();
     _pulseController.stop();
-    setState(() => _isListening = false);
+    setState(() {
+      _isListening = false;
+      _statusText = 'Analizando voz...';
+    });
     if (_lastWords.isNotEmpty) _processResult(_lastWords);
   }
 
