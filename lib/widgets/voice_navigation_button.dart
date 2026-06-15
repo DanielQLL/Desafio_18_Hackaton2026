@@ -180,13 +180,11 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
           setState(() => _lastWords = result.recognizedWords);
         }
       },
-      listenOptions: SpeechListenOptions(
-        listenFor: const Duration(seconds: 10),
-        pauseFor: const Duration(seconds: 3),
-        localeId: _localeId,
-        partialResults: true,
-        cancelOnError: false, // keep going on minor errors
-      ),
+      listenFor: const Duration(seconds: 10),
+      pauseFor: const Duration(seconds: 3),
+      localeId: 'es-ES', // Standardize to es-ES for Web compatibility
+      partialResults: true,
+      cancelOnError: false,
     );
   }
 
