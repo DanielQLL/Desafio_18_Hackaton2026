@@ -137,9 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (val == null || val.isEmpty) {
                                   return "El DNI es obligatorio";
                                 }
-                                if (val.length != 8) {
-                                  return "El DNI debe tener 8 dígitos";
-                                }
                                 return null;
                               },
                             ),
@@ -155,9 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               validator: (val) {
                                 if (val == null || val.isEmpty) {
                                   return "La clave es obligatoria";
-                                }
-                                if (val.length != 6) {
-                                  return "La clave debe tener 6 dígitos";
                                 }
                                 return null;
                               },

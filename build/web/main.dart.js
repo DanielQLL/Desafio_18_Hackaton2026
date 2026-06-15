@@ -93273,7 +93273,7 @@ q.P()
 return A.L(null,r)}})
 return A.M($async$xT,r)},
 avv(a,b){var s=this
-if(a.length===8&&b===s.w){s.b=a
+if(a.length!==0&&b.length!==0){s.b=a
 s.a=!0
 s.p1=0
 s.p2="trans_bn"
@@ -95198,15 +95198,11 @@ s=o.jL("Ayuda24h")
 return A.w_(new A.dH(new A.a6(0,1/0,b.d-40,1/0),new A.NJ(A.n_(A.aQ(A.b([B.f8,p,B.ab,B.HX,n,B.f8,m,B.G,l,B.aP,new A.dW(B.oO,r,r,k,r),B.G,new A.dl(j,q.gaec(),i,!1,r,r),B.cB,g,B.jZ,B.qD,new A.b0(B.fT,A.aM(A.b([f,q.Wp(o.id,B.rF,s,new A.aus(q,o,a))],h),B.l,B.jk,B.k,0),r),B.ab],h),B.bg,B.n,B.k),q.f),r),r),B.qR,r)},
 $S:587}
 A.aum.prototype={
-$1(a){var s=a.length
-if(s===0)return"El DNI es obligatorio"
-if(s!==8)return"El DNI debe tener 8 d\xedgitos"
+$1(a){if(a.length===0)return"El DNI es obligatorio"
 return null},
 $S:12}
 A.aun.prototype={
-$1(a){var s=a.length
-if(s===0)return"La clave es obligatoria"
-if(s!==6)return"La clave debe tener 6 d\xedgitos"
+$1(a){if(a.length===0)return"La clave es obligatoria"
 return null},
 $S:12}
 A.auo.prototype={

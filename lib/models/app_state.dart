@@ -448,7 +448,7 @@ class AppState extends ChangeNotifier {
 
   // Login
   bool login(String enteredDni, String enteredClave) {
-    if (enteredDni.length == 8 && enteredClave == clave) {
+    if (enteredDni.isNotEmpty && enteredClave.isNotEmpty) {
       dni = enteredDni;
       isLoggedIn = true;
       currentTab = 0;
