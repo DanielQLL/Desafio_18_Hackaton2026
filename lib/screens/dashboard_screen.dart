@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math';
 import '../models/app_state.dart';
 import 'components.dart';
+import '../widgets/voice_navigation_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,7 +14,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -30,79 +30,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: kBnBg,
-      appBar: AppBar(
-        backgroundColor: kBnRed,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // BN Logo
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
+      backgroundColor: state.simpleModeEnabled ? kBnBg : const Color(0xFF121317),
+      drawer: state.simpleModeEnabled ? null : const NormalNavigationDrawer(),
+      appBar: (state.simpleModeEnabled)
+          ? AppBar(
+              backgroundColor: kBnRed,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          "BN",
+                          style: TextStyle(
+                            color: kBnRed,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Banco de la Nación",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    "BN",
-                    style: TextStyle(
-                      color: kBnRed,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                  // Vista Adulto Mayor removed from header, moved to sidebar
+                ],
+              ),
+            )
+          : (state.showAccountDetails && state.currentTab == 0)
+              ? null
+              : (state.currentTab == 2)
+                  ? null
+                  : AppBar(
+                      backgroundColor: const Color(0xFF121317),
+                      elevation: 0,
+                      leading: state.currentTab == 0
+                          ? Builder(
+                              builder: (context) => IconButton(
+                                icon: const Icon(Icons.menu, color: Color(0xFFFF4D2D)),
+                                onPressed: () => Scaffold.of(context).openDrawer(),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Color(0xFFFF4D2D)),
+                              onPressed: () => state.setTab(0),
+                            ),
+                      title: Text(
+                        state.currentTab == 0
+                            ? "Mis cuentas"
+                            : state.currentTab == 1
+                                ? "Operaciones"
+                                : "Mi perfil",
+                        style: const TextStyle(
+                          color: Color(0xFFFF4D2D),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      actions: state.currentTab == 0
+                          ? [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                child: InkWell(
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MiQrScreen())),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: const Color(0xFFFF4D2D).withValues(alpha: 0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.qr_code_2, color: Color(0xFFFF4D2D), size: 16),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          "MI QR",
+                                          style: TextStyle(
+                                            color: Color(0xFFFF4D2D),
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.star, color: Color(0xFFFF4D2D)),
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Añadido a favoritos")),
+                                  );
+                                },
+                              ),
+                            ]
+                          : [],
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  "Banco de la Nación",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            // Dynamic Key Status & Simple Mode Toggle
-            Row(
-              children: [
-                Text(
-                  state.simpleModeEnabled ? "Modo Clásico" : "Modo Simple",
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 4),
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: state.simpleModeEnabled,
-                    onChanged: (val) => state.toggleSimpleMode(),
-                    activeColor: Colors.greenAccent,
-                    activeTrackColor: Colors.white30,
-                    inactiveThumbColor: Colors.white70,
-                    inactiveTrackColor: Colors.white24,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  state.cddActivated ? Icons.gpp_good : Icons.gpp_maybe,
-                  color: state.cddActivated ? Colors.greenAccent : Colors.orangeAccent,
-                  size: 18,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  state.cddActivated ? "CDD" : "Sin CDD",
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      body: Stack(
+      body: SafeArea(
+        child: Stack(
         children: [
           Column(
             children: [
@@ -129,58 +171,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-              Expanded(child: state.simpleModeEnabled ? SimpleDashboardView(state: state) : tabs[_currentIndex]),
+              Expanded(child: state.simpleModeEnabled ? SimpleDashboardView(state: state) : tabs[state.currentTab]),
             ],
           ),
           const AccessibilityFloatingButton(),
           const VoiceNarrationOverlay(),
+          // Voice navigation microphone button
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: VoiceNavigationButton(),
+          ),
         ],
-      ),
-      bottomNavigationBar: state.simpleModeEnabled
-          ? null
-          : NavigationBar(
-              selectedIndex: _currentIndex,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-                // TTS tab switch feedback
-                String sectionKey = "";
-                if (index == 0) sectionKey = 'Inicio';
-                if (index == 1) sectionKey = 'Operaciones';
-                if (index == 2) sectionKey = 'Seguridad';
-                if (index == 3) sectionKey = 'Mas';
-                
-                String sectionTrans = state.t(sectionKey);
-                String phrase = "";
-                if (state.currentLanguage == 'ES') phrase = "Ingresando a la sección $sectionTrans";
-                if (state.currentLanguage == 'QU') phrase = "Yaykuchkan $sectionTrans t'aqaman";
-                if (state.currentLanguage == 'AY') phrase = "Mantachkan $sectionTrans chikuru";
-                state.speak(phrase);
-              },
-              destinations: [
-                NavigationDestination(
-                  icon: const Icon(Icons.home_outlined),
-                  selectedIcon: const Icon(Icons.home, color: kBnRed),
-                  label: state.t('Inicio'),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.swap_horiz_outlined),
-                  selectedIcon: const Icon(Icons.swap_horiz, color: kBnRed),
-                  label: state.t('Operaciones'),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.shield_outlined),
-                  selectedIcon: const Icon(Icons.shield, color: kBnRed),
-                  label: state.t('Seguridad'),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.more_horiz_outlined),
-                  selectedIcon: const Icon(Icons.more_horiz, color: kBnRed),
-                  label: state.t('Mas'),
-                ),
-              ],
-            ),
+      )),
+      bottomNavigationBar: null,
     );
   }
 }
@@ -196,495 +200,638 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  bool _showBalances = true;
+  bool _showFullNumbers = false;
 
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
+    const darkBg = Color(0xFF121317);
+    const brandOrange = Color(0xFFFF4D2D);
+    const brandGreen = Color(0xFF2EC38D);
+    const brandGray = Color(0xFF1E1F23);
+    const textMuted = Color(0xFF9CA3AF);
+    const separator = Color(0xFF2A2A2A);
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Red Header Gradient card
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [kBnRed, kBnRedDark],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    if (state.showAccountDetails) {
+      // SCREEN 2: ACCOUNT DETAILS VIEW
+      return Container(
+        color: darkBg,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Sticky-like custom header (since Scaffold AppBar is null)
+              Container(
+                padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 8),
+                color: darkBg,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "${state.t('Hola')}, ${state.name.split(' ')[0]}",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20 * state.fontSizeMultiplier,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: brandOrange, size: 24),
+                          onPressed: () {
+                            state.setShowAccountDetails(false);
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "Cuenta ahorro",
+                          style: TextStyle(
+                            color: brandOrange,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                     IconButton(
-                      icon: Icon(
-                        _showBalances ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.white,
-                      ),
+                      icon: const Icon(Icons.credit_card_outlined, color: brandOrange, size: 24),
                       onPressed: () {
-                        setState(() {
-                          _showBalances = !_showBalances;
-                        });
-                        state.speak(
-                          _showBalances 
-                              ? (state.currentLanguage == 'ES' ? "Mostrando saldos" : "Qullqi qhawachiq")
-                              : (state.currentLanguage == 'ES' ? "Ocultando saldos" : "Qullqi pakachiq")
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Mostrando tarjetas vinculadas")),
                         );
                       },
                     ),
                   ],
                 ),
-                Text(
-                  state.t('Bienvenido'),
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13 * state.fontSizeMultiplier,
-                  ),
+              ),
+
+              // Account Identification Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _showFullNumbers = !_showFullNumbers;
+                        });
+                        state.speak(
+                          _showFullNumbers
+                              ? "Mostrando número de cuenta y CCI completo"
+                              : "Ocultando números de cuenta y CCI"
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _showFullNumbers ? Icons.visibility : Icons.visibility_off,
+                            color: brandOrange,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            "Mostrar el NÂº Cuenta y el CCI",
+                            style: TextStyle(
+                              color: brandOrange,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "NÂº Cuenta: ${_showFullNumbers ? state.accountNo : "**-***-**4921"}",
+                      style: const TextStyle(
+                        color: textMuted,
+                        fontSize: 13,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "NÂº Cuenta Interbancario (CCI): ${_showFullNumbers ? state.cci : "***-***-*********4921-12"}",
+                      style: const TextStyle(
+                        color: textMuted,
+                        fontSize: 13,
+                        fontFamily: 'monospace',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                
-                // Account Balance Card (Savings)
-                Container(
-                  width: double.infinity,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Balance Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      "S/ 1,450.25",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Saldo disponible",
+                      style: TextStyle(
+                        color: textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      "Saldo contable: S/ 1,450.25",
+                      style: TextStyle(
+                        color: brandGreen,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Transaction List Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Mis movimientos",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Movements List
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: min(6, state.movements.length),
+                      itemBuilder: (context, index) {
+                        final movement = state.movements[index];
+                        final isNegative = !movement.isCredit;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14.0),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: separator, width: 1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      movement.description.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                    if (movement.category.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        movement.category.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: textMuted,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    "${isNegative ? '-' : ''} S/ ${movement.amount.toStringAsFixed(2)}",
+                                    style: TextStyle(
+                                      color: isNegative ? brandOrange : Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    movement.date,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              // Mimicking the home indicator of mobile devices
+              Center(
+                child: Container(
+                  width: 120,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            state.t('CuentaAhorros'),
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14 * state.fontSizeMultiplier),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white24,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              "N° ${state.accountNo}",
-                              style: TextStyle(color: Colors.white, fontSize: 11 * state.fontSizeMultiplier),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(state.t('SaldoDisp'), style: TextStyle(color: Colors.white70, fontSize: 11 * state.fontSizeMultiplier)),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _showBalances ? "S/ ${state.savingsSoles.toStringAsFixed(2)}" : "S/ ••••••",
-                                  style: TextStyle(color: Colors.white, fontSize: 22 * state.fontSizeMultiplier, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(state.t('SaldoContable'), style: TextStyle(color: Colors.white70, fontSize: 11 * state.fontSizeMultiplier)),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _showBalances ? "S/ ${state.savingsContable.toStringAsFixed(2)}" : "S/ ••••••",
-                                  style: TextStyle(color: Colors.white70, fontSize: 15 * state.fontSizeMultiplier, fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 20, color: Colors.white24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "CCI: ${state.cci}",
-                            style: const TextStyle(color: Colors.white70, fontSize: 11),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy, color: Colors.white, size: 16),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("CCI copiado al portapapeles")),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // US Dollar Balance
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text("Saldo Dólares (USD)", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          Text(
-                            _showBalances ? "\$ ${state.savingsDollars.toStringAsFixed(2)}" : "\$ ••••••",
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
+                    color: Colors.grey.shade800,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-          
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // CTS Account (If exists)
-                const SizedBox(height: 16),
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      );
+    }
+
+    // SCREEN 1: MAIN HOME VIEW
+    return Container(
+      color: darkBg,
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Currency Exchange rate banner
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.monetization_on, color: brandOrange, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    "Dí“LAR REF. COMPRA 3.35 VENTA 3.44",
+                    style: TextStyle(
+                      color: brandOrange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.expand_more, color: brandOrange, size: 16),
+                ],
+              ),
+            ),
+
+            // Greeting Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "¡Hola!",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          state.name.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text(
+                    "DOMINGO, 14 DE JUNIO DE 2026",
+                    style: TextStyle(
+                      color: textMuted,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Accounts List Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                padding: const EdgeInsets.only(bottom: 8),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFF343539), width: 1),
+                  ),
+                ),
+                child: const Text(
+                  "Mis cuentas en soles",
+                  style: TextStyle(
+                    color: textMuted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Main Account Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Card(
+                color: brandGray,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
+                ),
+                elevation: 0,
+                child: InkWell(
+                  onTap: () {
+                    state.setShowAccountDetails(true);
+                    state.speak("Ingresando al detalle de la cuenta de ahorros");
+                  },
+                  borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.business_center, color: Colors.orange.shade800),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Cuenta de CTS",
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kBnTextDark),
-                              ),
-                              const SizedBox(height: 2),
-                              const Text("Compensación por Tiempo de Servicio", style: TextStyle(color: kBnTextLight, fontSize: 11)),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _showBalances ? "S/ ${state.ctsSoles.toStringAsFixed(2)}" : "S/ ••••••",
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: kBnTextDark),
+                              "Cuenta Ahorro",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            const Text("Sin Token / CDD", style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
+                            SizedBox(height: 4),
+                            Text(
+                              "**_***_**0636",
+                              style: TextStyle(
+                                color: textMuted,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "S/ 200.50",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  "SALDO DISPONIBLE",
+                                  style: TextStyle(
+                                    color: textMuted,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: brandOrange,
+                              size: 24,
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
                 ),
+              ),
+            ),
 
-                // Exchange Rate & Quick QR Access
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    // Tipo Cambio
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.currency_exchange, color: kBnRed, size: 16),
-                                SizedBox(width: 4),
-                                Text("Tipo de Cambio", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                              ],
-                            ),
-                            const Divider(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text("Compra", style: TextStyle(fontSize: 10, color: kBnTextLight)),
-                                    Text("S/ ${state.usdBuy.toStringAsFixed(3)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    const Text("Venta", style: TextStyle(fontSize: 10, color: kBnTextLight)),
-                                    Text("S/ ${state.usdSell.toStringAsFixed(3)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+            const SizedBox(height: 16),
+
+
+
+            // Promotional Banners Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                children: [
+                  // Banner 1: Pagos con QR
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00BFA5), Color(0xFF00897B)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 12),
-                    // QR BN Button
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          _showQrDialog(context, state);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))
-                            ],
-                          ),
-                          child: const Row(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.qr_code_2, color: kBnRed, size: 40),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("Mi QR BN", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: kBnTextDark)),
-                                    Text("Cobrar y Pagar", style: TextStyle(fontSize: 11, color: kBnTextLight)),
-                                  ],
+                              const Text(
+                                "¡Realiza pagos más rápidos pagando con QR!",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: const Color(0xFF00897B),
+padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MiQrScreen()));
+                                },
+                                child: const Text(
+                                  "Hazlo aquí",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Transform.rotate(
+                          angle: -0.2,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.qr_code_2,
+                              color: Color(0xFF00897B),
+                              size: 42,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Banner 2: Afiliación celular
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.15),
+                        width: 1,
                       ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                ),
-
-                // Quick Operations Buttons
-                const SizedBox(height: 20),
-                const Text(
-                  "Accesos Rápidos",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kBnTextDark),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _quickActionButton(
-                      icon: Icons.send_rounded,
-                      label: "Transferir",
-                      color: Colors.teal.shade700,
-                      onTap: () {
-                        // Open operations or prompt transfer
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Dirígete a la pestaña 'Operaciones' para transferir")),
-                        );
-                      },
-                    ),
-                    _quickActionButton(
-                      icon: Icons.payments_outlined,
-                      label: "Pagar Luz/Agua",
-                      color: Colors.amber.shade800,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Dirígete a la pestaña 'Operaciones' para pagar")),
-                        );
-                      },
-                    ),
-                    _quickActionButton(
-                      icon: Icons.phone_android_rounded,
-                      label: "Recargar Celular",
-                      color: Colors.blue.shade700,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Dirígete a la pestaña 'Operaciones' para recargar")),
-                        );
-                      },
-                    ),
-                    _quickActionButton(
-                      icon: Icons.contact_phone_rounded,
-                      label: "Yape y Plin",
-                      color: Colors.purple.shade700,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Dirígete a la pestaña 'Operaciones' -> 'Transferencia Celular'")),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-
-                // Transactions / Movements List (20 movements)
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Últimos Movimientos (20)",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kBnTextDark),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Show filter bottom sheet or download certificate mockup
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Constancia consolidada descargada en PDF")),
-                        );
-                      },
-                      child: const Text("Descargar todo", style: TextStyle(color: kBnRed, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: min(20, state.movements.length),
-                  itemBuilder: (context, index) {
-                    final movement = state.movements[index];
-                    return Card(
-                      elevation: 0.5,
-                      margin: const EdgeInsets.only(bottom: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: movement.isCredit ? Colors.green.shade50 : Colors.red.shade50,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            movement.isCredit ? Icons.arrow_downward : Icons.arrow_upward,
-                            color: movement.isCredit ? Colors.green : kBnRed,
-                            size: 18,
+                    child: Row(
+                      children: [
+                        Transform.rotate(
+                          angle: 0.2,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: brandGray,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.smartphone,
+                              color: brandOrange,
+                              size: 42,
+                            ),
                           ),
                         ),
-                        title: Text(
-                          movement.description,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: kBnTextDark),
-                        ),
-                        subtitle: Row(
-                          children: [
-                            Text(movement.date, style: const TextStyle(fontSize: 11, color: kBnTextLight)),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: movement.type == "CTS" ? Colors.orange.shade50 : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(4),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              const Text(
+                                "Afilia un celular para realizar tus operaciones",
+                                style: TextStyle(
+                                  color: brandGray,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  height: 1.2,
+                                ),
+                                textAlign: TextAlign.right,
                               ),
-                              child: Text(
-                                movement.type,
-                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: movement.type == "CTS" ? Colors.orange.shade800 : kBnTextLight),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: brandOrange,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                onPressed: () {
+                                  state.setTab(1);
+                                  state.setOperationsFlow("trans_cell");
+                                },
+                                child: const Text(
+                                  "Hazlo aquí",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
-                            )
-                          ],
-                        ),
-                        trailing: Text(
-                          "${movement.isCredit ? '+' : '-'} S/ ${movement.amount.toStringAsFixed(2)}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: movement.isCredit ? Colors.green.shade700 : Colors.red.shade700,
+                            ],
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _quickActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 76,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: kBnTextDark,
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
+}
 
-  // QR Modal Dialog
-  void _showQrDialog(BuildContext context, AppState state) {
+// QR Modal Dialog
+void showQrDialog(BuildContext context, AppState state) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -838,7 +985,6 @@ class _HomeTabState extends State<HomeTab> {
       },
     );
   }
-}
 
 // 2. OPERATIONS TAB
 class OperationsTab extends StatefulWidget {
@@ -852,19 +998,17 @@ class _OperationsTabState extends State<OperationsTab> {
   // To handle subviews inside the Operations tab (e.g. transfer form, recharge form, pay utility)
   // We can use a stack or simple navigator/conditional rendering. 
   // Conditional rendering makes it look like a smooth SPA!
-  String _activeFlow = "menu"; // "menu", "trans_bn", "trans_cell", "trans_inter", "trans_tc", "pay_water", "pay_electricity", "pay_phone", "recharge", "giro", "withdrawal"
   
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
+    final activeFlow = state.operationsFlow;
     
     // Back handler
     Widget wrapFlow(Widget flowWidget, String title) {
       return WillPopScope(
         onWillPop: () async {
-          setState(() {
-            _activeFlow = "menu";
-          });
+          state.setTab(0);
           return false;
         },
         child: Scaffold(
@@ -876,9 +1020,7 @@ class _OperationsTabState extends State<OperationsTab> {
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
-                setState(() {
-                  _activeFlow = "menu";
-                });
+                state.setTab(0);
               },
             ),
           ),
@@ -887,117 +1029,27 @@ class _OperationsTabState extends State<OperationsTab> {
       );
     }
 
-    if (_activeFlow == "menu") {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // TRANSFERENCIAS
-          const CategoryHeader(title: "Transferencias", icon: Icons.swap_horiz, color: Colors.teal),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              children: [
-                _menuItem(
-                  icon: Icons.account_balance,
-                  title: "A Cuentas Mismo Banco (BN)",
-                  desc: "Transfiere a cuentas del Banco de la Nación",
-                  onTap: () => setState(() => _activeFlow = "trans_bn"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.phone_android,
-                  title: "Transferir a Celular",
-                  desc: "Yape, Plin y bancos (Gratis hasta S/500)",
-                  onTap: () => setState(() => _activeFlow = "trans_cell"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  title: "Transferencias Interbancarias",
-                  desc: "Inmediatas o diferidas por CCI",
-                  onTap: () => setState(() => _activeFlow = "trans_inter"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.credit_card,
-                  title: "Pago de Tarjeta de Crédito",
-                  desc: "Paga tarjetas de crédito de otros bancos",
-                  onTap: () => setState(() => _activeFlow = "trans_tc"),
-                ),
-              ],
+    if (activeFlow == "menu") {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => state.setOperationsFlow("trans_bn"),
+              child: const Text("Ir a Transferencias"),
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // PAGOS Y RECARGAS
-          const CategoryHeader(title: "Pagos y Recargas", icon: Icons.payments, color: Colors.amber),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              children: [
-                _menuItem(
-                  icon: Icons.water_drop_outlined,
-                  title: "Pago de Agua",
-                  desc: "Sedapal, Sedalib y otras EPS",
-                  onTap: () => setState(() => _activeFlow = "pay_water"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.bolt,
-                  title: "Pago de Luz",
-                  desc: "Enel, Luz del Sur, Electrocentro, etc.",
-                  onTap: () => setState(() => _activeFlow = "pay_electricity"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.phone,
-                  title: "Telefonía y Cable",
-                  desc: "Movistar, Claro, Win, Entel fijo",
-                  onTap: () => setState(() => _activeFlow = "pay_phone"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.smartphone,
-                  title: "Recargas de Celular",
-                  desc: "Claro, Movistar, Entel, Bitel",
-                  onTap: () => setState(() => _activeFlow = "recharge"),
-                ),
-              ],
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => state.setOperationsFlow("pay_water"),
+              child: const Text("Ir a Pago de Agua"),
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // GIROS Y RETIRO SIN TARJETA
-          const CategoryHeader(title: "Servicios MultiRed", icon: Icons.card_membership_rounded, color: Colors.deepOrange),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              children: [
-                _menuItem(
-                  icon: Icons.send_to_mobile,
-                  title: "Emitir Giro MultiRed",
-                  desc: "Desde S/4 a S/1,000 · Tarifa fija S/3",
-                  onTap: () => setState(() => _activeFlow = "giro"),
-                ),
-                const Divider(height: 1),
-                _menuItem(
-                  icon: Icons.no_accounts_outlined,
-                  title: "Retiro sin Tarjeta",
-                  desc: "Genera código de retiro de 10 min",
-                  onTap: () => setState(() => _activeFlow = "withdrawal"),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
+          ],
+        ),
       );
     }
     
     // Sub Flow Widget builders
-    switch (_activeFlow) {
+    switch (activeFlow) {
       case "trans_bn":
         return wrapFlow(const TransferSameBankFlow(), "Transferencia Mismo Banco");
       case "trans_cell":
@@ -1085,18 +1137,63 @@ class SecurityTab extends StatefulWidget {
 class _SecurityTabState extends State<SecurityTab> {
   final _reasonController = TextEditingController();
 
+  // Timer & Code for CDD
+  Timer? _timer;
+  int _secondsLeft = 30;
+  String _token = "820 415";
+
+  // Card Limits
+  double _atmLimit = 1500.0;
+  double _posLimit = 5000.0;
+
+  // Transfer Limits & wallets
+  double _cellLimit = 500.0;
+  String _preferredWallet = "Yape";
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (_secondsLeft > 1) {
+            _secondsLeft--;
+          } else {
+            _secondsLeft = 30;
+            final random = Random();
+            final code = 100000 + random.nextInt(900000);
+            final s = code.toString();
+            _token = "${s.substring(0, 3)} ${s.substring(3)}";
+          }
+        });
+      }
+    });
+  }
+
   void _showBlockDialog(BuildContext context, AppState state) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Bloquear Tarjeta", style: TextStyle(color: kBnRed, fontWeight: FontWeight.bold)),
+          backgroundColor: const Color(0xFF1E1F23),
+          title: const Text("Bloquear Tarjeta", style: TextStyle(color: Color(0xFFFF4D2D), fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "¿Está seguro de bloquear su tarjeta Multired de forma definitiva? Esta operación inhabilitará retiros y compras de inmediato.",
-                style: TextStyle(fontSize: 13),
+                "Â¿Está seguro de bloquear su tarjeta Multired de forma definitiva? Esta operación inhabilitará retiros y compras de inmediato.",
+                style: TextStyle(fontSize: 13, color: Colors.white70),
               ),
               const SizedBox(height: 16),
               BnTextField(
@@ -1109,25 +1206,17 @@ class _SecurityTabState extends State<SecurityTab> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancelar", style: TextStyle(color: kBnTextLight)),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: kBnRed),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4D2D)),
               onPressed: () {
                 if (_reasonController.text.isNotEmpty) {
                   Navigator.pop(context);
-                  showDialog(
-                    context: context,
-                    builder: (c) => CddVerificationDialog(
-                      operationDetails: "Bloqueo definitivo de tarjeta Multired por: ${_reasonController.text}",
-                      onVerified: () {
-                        state.blockCard(_reasonController.text);
-                        _reasonController.clear();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Su tarjeta ha sido BLOQUEADA. Comuníquese al 0-800-10-700 para reposición")),
-                        );
-                      },
-                    ),
+                  state.blockCard(_reasonController.text);
+                  _reasonController.clear();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Su tarjeta ha sido BLOQUEADA. Comuníquese al 0-800-10-700 para reposición")),
                   );
                 }
               },
@@ -1142,159 +1231,728 @@ class _SecurityTabState extends State<SecurityTab> {
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
+    const darkBg = Color(0xFF121212);
+    const appOrange = Color(0xFFF2522E);
+    const appCyan = Color(0xFF77CBD4);
+    const appBorder = Color(0xFF2A2A2A);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Plastic card simulation
-        Container(
-          width: double.infinity,
-          height: 180,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF333333), Color(0xFF111111)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
-            ],
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "MultiRed Débito",
-                    style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: kBnRed, borderRadius: BorderRadius.circular(4)),
-                    child: const Text("VISA", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                state.cardNo,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+    if (state.securitySubFlow == "menu") {
+      return Container(
+        color: darkBg,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Custom Header matching HTML mockup but with back arrow to Tab 0
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: appBorder, width: 1),
                 ),
               ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Row(
                 children: [
-                  Text(
-                    state.name,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: appOrange, size: 28),
+                    onPressed: () {
+                      state.setTab(0);
+                    },
                   ),
+                  const SizedBox(width: 8),
                   const Text(
-                    "VAL 12/28",
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                    "Configuración y seguridad",
+                    style: TextStyle(
+                      color: appOrange,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+
+            // Settings list items
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _menuItem(
+                    icon: Icons.credit_card_off_outlined,
+                    title: "Bloqueo de tarjetas",
+                    color: appOrange,
+                    isActive: true,
+                    onTap: () {
+                      state.setSecuritySubFlow("bloqueo");
+                      state.speak("Ingresando a bloqueo de tarjetas");
+                    },
+                  ),
+                  _menuItem(
+                    icon: Icons.lock_open_outlined,
+                    title: "Clave Dinámica Digital",
+                    color: appCyan,
+                    isActive: false,
+                    onTap: () {
+                      state.setSecuritySubFlow("cdd");
+                      state.speak("Ingresando a clave dinámica digital");
+                    },
+                  ),
+                  _menuItem(
+                    icon: Icons.credit_card_outlined,
+                    title: "Configurar tarjetas",
+                    color: appCyan,
+                    isActive: false,
+                    onTap: () {
+                      state.setSecuritySubFlow("config_tarjetas");
+                      state.speak("Ingresando a configurar tarjetas");
+                    },
+                  ),
+                  _menuItem(
+                    icon: Icons.contact_phone_outlined,
+                    title: "Configurar transferencia a contacto",
+                    color: appCyan,
+                    isActive: false,
+                    onTap: () {
+                      state.setSecuritySubFlow("config_transfer");
+                      state.speak("Ingresando a configurar transferencia a contacto");
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+      );
+    }
 
-        const SizedBox(height: 24),
-        const Text("Configuración de Tarjeta", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 12),
-
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Column(
-            children: [
-              SwitchListTile(
-                title: const Text("Compras por Internet", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                subtitle: const Text("Permitir compras en páginas web y apps", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
-                value: state.isInternetPurchasesEnabled,
-                onChanged: (val) {
-                  state.toggleCardSetting('internet');
-                },
-              ),
-              const Divider(height: 1),
-              SwitchListTile(
-                title: const Text("Consumo en el extranjero", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                subtitle: const Text("Habilita compras y retiros fuera del Perú", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
-                value: state.isForeignConsumptionEnabled,
-                onChanged: (val) {
-                  state.toggleCardSetting('foreign');
-                },
-              ),
-              const Divider(height: 1),
-              SwitchListTile(
-                title: const Text("Transferencias y Retiros", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                subtitle: const Text("Permite transacciones interbancarias y cajeros", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
-                value: state.isTransfersEnabled,
-                onChanged: (val) {
-                  state.toggleCardSetting('transfers');
-                },
-              ),
-              const Divider(height: 1),
-              SwitchListTile(
-                title: const Text("Notificaciones de Transacción", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                subtitle: const Text("Recibe notificaciones en tiempo real por cada consumo", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
-                value: state.isNotificationsEnabled,
-                onChanged: (val) {
-                  state.toggleCardSetting('notifications');
-                },
-              ),
-              const Divider(height: 1),
-              SwitchListTile(
-                title: const Text("Afiliado a Transferencias por Celular", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                subtitle: const Text("Permite recibir y enviar dinero vía Yape/Plin", style: TextStyle(fontSize: 11)),
-                activeColor: kBnRed,
-                value: state.isCellularTransferAffiliated,
-                onChanged: (val) {
-                  showDialog(
-                    context: context,
-                    builder: (c) => CddVerificationDialog(
-                      operationDetails: state.isCellularTransferAffiliated
-                          ? "Desafiliación del número ${state.phone} de transferencias móviles"
-                          : "Afiliación del número ${state.phone} a transferencias móviles",
-                      onVerified: () {
-                        state.toggleCardSetting('cellular');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(state.isCellularTransferAffiliated ? "Afiliación exitosa" : "Desafiliación exitosa")),
-                        );
-                      },
+    // SUB-FLOWS
+    if (state.securitySubFlow == "bloqueo") {
+      return Container(
+        color: darkBg,
+        child: Column(
+          children: [
+            _subHeader(
+              title: "Bloqueo de tarjetas",
+              color: appOrange,
+              onBack: () => state.setSecuritySubFlow("menu"),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Plastic card simulation
+                  Container(
+                    width: double.infinity,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF333333), Color(0xFF111111)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
+                      ],
                     ),
-                  );
-                },
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "MultiRed Débito",
+                              style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: const Color(0xFFFF4D2D), borderRadius: BorderRadius.circular(4)),
+                              child: const Text("VISA", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          state.cardNo,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              state.name,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                            const Text(
+                              "VAL 12/28",
+                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  BnButton(
+                    text: "Bloquear Tarjeta Definitivo",
+                    icon: Icons.lock,
+                    onPressed: () => _showBlockDialog(context, state),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "El bloqueo es irreversible. En caso de pérdida, robo o sospecha de fraude, proceda de inmediato. También puede comunicarse a la línea gratuita 0-800-10-700 (24 horas).",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, fontSize: 11),
+                  ),
+                ],
               ),
-            ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.securitySubFlow == "config_tarjetas") {
+      return Container(
+        color: darkBg,
+        child: Column(
+          children: [
+            _subHeader(
+              title: "Configurar tarjetas",
+              color: appCyan,
+              onBack: () => state.setSecuritySubFlow("menu"),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    color: const Color(0xFF1E1F23),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          title: const Text("Compras por Internet", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                          subtitle: const Text("Permitir compras en páginas web y apps", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          activeColor: appOrange,
+                          value: state.isInternetPurchasesEnabled,
+                          onChanged: (val) {
+                            state.toggleCardSetting('internet');
+                          },
+                        ),
+                        const Divider(height: 1, color: appBorder),
+                        SwitchListTile(
+                          title: const Text("Consumo en el extranjero", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                          subtitle: const Text("Habilita compras y retiros fuera del Perú", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          activeColor: appOrange,
+                          value: state.isForeignConsumptionEnabled,
+                          onChanged: (val) {
+                            state.toggleCardSetting('foreign');
+                          },
+                        ),
+                        const Divider(height: 1, color: appBorder),
+                        SwitchListTile(
+                          title: const Text("Transferencias y Retiros", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                          subtitle: const Text("Permite transacciones interbancarias y cajeros", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          activeColor: appOrange,
+                          value: state.isTransfersEnabled,
+                          onChanged: (val) {
+                            state.toggleCardSetting('transfers');
+                          },
+                        ),
+                        const Divider(height: 1, color: appBorder),
+                        SwitchListTile(
+                          title: const Text("Notificaciones de Transacción", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                          subtitle: const Text("Recibe notificaciones en tiempo real por cada consumo", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          activeColor: appOrange,
+                          value: state.isNotificationsEnabled,
+                          onChanged: (val) {
+                            state.toggleCardSetting('notifications');
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Límites diarios de tarjeta",
+                    style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    color: const Color(0xFF1E1F23),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Límite Diario Cajero (ATM)", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                              Text("S/ ${_atmLimit.toStringAsFixed(0)}", style: const TextStyle(color: appCyan, fontSize: 14, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          Slider(
+                            min: 0,
+                            max: 3000,
+                            divisions: 30,
+                            activeColor: appCyan,
+                            inactiveColor: appBorder,
+                            value: _atmLimit,
+                            onChanged: (val) {
+                              setState(() {
+                                _atmLimit = val;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Límite Diario Compras (POS)", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                              Text("S/ ${_posLimit.toStringAsFixed(0)}", style: const TextStyle(color: appCyan, fontSize: 14, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          Slider(
+                            min: 0,
+                            max: 10000,
+                            divisions: 20,
+                            activeColor: appCyan,
+                            inactiveColor: appBorder,
+                            value: _posLimit,
+                            onChanged: (val) {
+                              setState(() {
+                                _posLimit = val;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          BnButton(
+                            text: "Guardar límites",
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Límites de tarjeta guardados correctamente")),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.securitySubFlow == "cdd") {
+      return Container(
+        color: darkBg,
+        child: Column(
+          children: [
+            _subHeader(
+              title: "Clave Dinámica Digital",
+              color: appCyan,
+              onBack: () => state.setSecuritySubFlow("menu"),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1F23),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: appBorder, width: 1),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          state.cddActivated ? Icons.gpp_good : Icons.gpp_maybe,
+                          color: state.cddActivated ? Colors.greenAccent : appOrange,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          state.cddActivated ? "Clave Dinámica Activada" : "Clave Dinámica Inactiva",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.cddActivated
+                              ? "Tu dispositivo está autorizado para autorizar transferencias y pagos de manera segura."
+                              : "Activa la Clave Dinámica Digital (CDD) para autorizar todas tus operaciones desde esta app.",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                        const SizedBox(height: 24),
+                        if (state.cddActivated) ...[
+                          const Text(
+                            "Tu código dinámico actual es:",
+                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: _token.split('').map((char) {
+                              if (char == ' ') return const SizedBox(width: 16);
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2E3035),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: appBorder),
+                                ),
+                                child: Text(
+                                  char,
+                                  style: const TextStyle(
+                                    color: appCyan,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  value: _secondsLeft / 30,
+                                  valueColor: const AlwaysStoppedAnimation<Color>(appCyan),
+                                  backgroundColor: appBorder,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Se actualizará en $_secondsLeft segundos",
+                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: state.cddActivated ? Colors.redAccent : appOrange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (state.cddActivated) {
+                              state.deactivateCdd();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Clave Dinámica Digital desactivada")),
+                              );
+                            } else {
+                              state.activateCdd();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Clave Dinámica Digital activada exitosamente")),
+                              );
+                            }
+                          },
+                          child: Text(
+                            state.cddActivated ? "Desactivar CDD" : "Activar CDD",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.securitySubFlow == "config_transfer") {
+      return Container(
+        color: darkBg,
+        child: Column(
+          children: [
+            _subHeader(
+              title: "Configurar transferencias",
+              color: appCyan,
+              onBack: () => state.setSecuritySubFlow("menu"),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    color: const Color(0xFF1E1F23),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            title: const Text("Afiliado a Transferencias por Celular", style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                            subtitle: const Text("Permite recibir y enviar dinero vía Yape/Plin", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                            activeColor: appOrange,
+                            value: state.isCellularTransferAffiliated,
+                            onChanged: (val) {
+                              state.toggleCardSetting('cellular');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(state.isCellularTransferAffiliated ? "Afiliación exitosa" : "Desafiliación exitosa")),
+                              );
+                            },
+                          ),
+                          const Divider(height: 1, color: appBorder),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text("Número celular afiliado:", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                Text(state.phone, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (state.isCellularTransferAffiliated) ...[
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Wallet digital preferido",
+                      style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _preferredWallet = "Yape";
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: _preferredWallet == "Yape" ? const Color(0xFF241411) : const Color(0xFF1E1F23),
+                                border: Border.all(
+                                  color: _preferredWallet == "Yape" ? appOrange : appBorder,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Image.network(
+                                    "https://lh3.googleusercontent.com/aida-public/AB6AXuDFHjR22Fq2H78mG_JzZ1DkEPLhH7xGZlhxZsk", // mock logo placeholder or text
+                                    width: 48,
+                                    height: 48,
+                                    errorBuilder: (c, e, s) => const Icon(Icons.wallet, color: Colors.purpleAccent, size: 48),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text("YAPE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _preferredWallet = "Plin";
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: _preferredWallet == "Plin" ? const Color(0xFF241411) : const Color(0xFF1E1F23),
+                                border: Border.all(
+                                  color: _preferredWallet == "Plin" ? appOrange : appBorder,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Image.network(
+                                    "https://lh3.googleusercontent.com/aida-public/AB6AXuDFHjR22Fq2H78mG_JzZ1DkEPLhH7xGZlhxZsk", // mock
+                                    width: 48,
+                                    height: 48,
+                                    errorBuilder: (c, e, s) => const Icon(Icons.wallet_giftcard, color: Colors.tealAccent, size: 48),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text("PLIN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Límite diario de transferencias móviles",
+                      style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      color: const Color(0xFF1E1F23),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text("Límite diario móvil", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                Text("S/ ${_cellLimit.toStringAsFixed(0)}", style: const TextStyle(color: appCyan, fontSize: 14, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            Slider(
+                              min: 0,
+                              max: 1000,
+                              divisions: 20,
+                              activeColor: appCyan,
+                              inactiveColor: appBorder,
+                              value: _cellLimit,
+                              onChanged: (val) {
+                                setState(() {
+                                  _cellLimit = val;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            BnButton(
+                              text: "Guardar configuración",
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Configuración de transferencias guardada")),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox();
+  }
+
+  Widget _menuItem({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF241411) : Colors.transparent,
+          border: const Border(
+            bottom: BorderSide(color: Color(0xFF2A2A2A), width: 1),
           ),
         ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(icon, color: color, size: 28),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Colors.grey,
+              size: 24,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-        const SizedBox(height: 24),
-        BnButton(
-          text: "Bloquear Tarjeta Definitivo",
-          icon: Icons.lock,
-          onPressed: () => _showBlockDialog(context, state),
+  Widget _subHeader({
+    required String title,
+    required Color color,
+    required VoidCallback onBack,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Color(0xFF2A2A2A), width: 1),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          "El bloqueo es irreversible. En caso de pérdida, robo o sospecha de fraude, proceda de inmediato. También puede comunicarse a la línea gratuita 0-800-10-700 (24 horas).",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: kBnTextLight, fontSize: 11),
-        ),
-        const SizedBox(height: 32),
-      ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFFF2522E), size: 28),
+            onPressed: onBack,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1356,7 +2014,7 @@ class ProfileTab extends StatelessWidget {
                 icon: Icons.edit_outlined,
                 title: "Editar Perfil",
                 desc: "Actualizar teléfono, operador y correo",
-                onTap: () => _showEditProfileDialog(context, state),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen())),
               ),
               const Divider(height: 1),
               _profileItem(
@@ -1364,7 +2022,7 @@ class ProfileTab extends StatelessWidget {
                 icon: Icons.map_outlined,
                 title: "Ubícanos (Agencias y Cajeros)",
                 desc: "Ubica canales MultiRed más cercanos sin sesión",
-                onTap: () => _showUbicanosDialog(context),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const UbicanosScreen())),
               ),
               const Divider(height: 1),
               _profileItem(
@@ -1372,7 +2030,7 @@ class ProfileTab extends StatelessWidget {
                 icon: Icons.monetization_on_outlined,
                 title: "Préstamos MultiRed",
                 desc: "Simula o solicita préstamos personales",
-                onTap: () => _showLoanDialog(context, state),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LoanScreen())),
               ),
               const Divider(height: 1),
               _profileItem(
@@ -1380,7 +2038,7 @@ class ProfileTab extends StatelessWidget {
                 icon: Icons.key_outlined,
                 title: "Cambiar Clave de Internet",
                 desc: "Cambia tu clave de 6 dígitos periódicamente",
-                onTap: () => _showChangeClaveDialog(context, state),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangeClaveScreen())),
               ),
               const Divider(height: 1),
               _profileItem(
@@ -1388,7 +2046,7 @@ class ProfileTab extends StatelessWidget {
                 icon: Icons.headset_mic_outlined,
                 title: "Contáctanos",
                 desc: "Línea de soporte y atención 24 horas",
-                onTap: () => _showContactanosDialog(context),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactanosScreen())),
               ),
             ],
           ),
@@ -1424,9 +2082,10 @@ class ProfileTab extends StatelessWidget {
       onTap: onTap,
     );
   }
+}
 
-  // Edit Profile dialog
-  void _showEditProfileDialog(BuildContext context, AppState state) {
+// Edit Profile dialog
+void showEditProfileDialog(BuildContext context, AppState state) {
     final phoneController = TextEditingController(text: state.phone);
     final emailController = TextEditingController(text: state.email);
     String selectedCarrier = state.carrier;
@@ -1519,8 +2178,8 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  // Ubícanos simulated locator
-  void _showUbicanosDialog(BuildContext context) {
+// Ubícanos simulated locator
+void showUbicanosDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -1594,24 +2253,24 @@ class ProfileTab extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      _locationTile(
+                      locationTile(
                         icon: Icons.apartment,
                         title: "Agencia San Isidro - BN",
-                        desc: "Av. Javier Prado Este 2499 · 250m",
+                        desc: "Av. Javier Prado Este 2499 Â· 250m",
                         hours: "Lunes a Viernes 8:00 AM - 5:30 PM",
                         color: kBnRed,
                       ),
-                      _locationTile(
+                      locationTile(
                         icon: Icons.atm,
                         title: "Cajero ATM MultiRed",
-                        desc: "C.C. La Rambla - Piso 1 · 450m",
+                        desc: "C.C. La Rambla - Piso 1 Â· 450m",
                         hours: "Abierto 24 Horas",
                         color: Colors.blue.shade800,
                       ),
-                      _locationTile(
+                      locationTile(
                         icon: Icons.store,
                         title: "Agente Corresponsal MultiRed - Bodega Rossi",
-                        desc: "Calle Las Begonias 340 · 600m",
+                        desc: "Calle Las Begonias 340 Â· 600m",
                         hours: "Lunes a Sábado 9:00 AM - 9:00 PM",
                         color: Colors.green.shade800,
                       ),
@@ -1626,40 +2285,40 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  Widget _locationTile({
-    required IconData icon,
-    required String title,
-    required String desc,
-    required String hours,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 0.5,
-      margin: const EdgeInsets.only(bottom: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
-                  Text(desc, style: const TextStyle(fontSize: 10, color: kBnTextLight)),
-                  Text(hours, style: TextStyle(fontSize: 9, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
-                ],
-              ),
+Widget locationTile({
+  required IconData icon,
+  required String title,
+  required String desc,
+  required String hours,
+  required Color color,
+}) {
+  return Card(
+    elevation: 0.5,
+    margin: const EdgeInsets.only(bottom: 6),
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
+                Text(desc, style: const TextStyle(fontSize: 10, color: kBnTextLight)),
+                Text(hours, style: TextStyle(fontSize: 9, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  // Loans Simulator Dialog
-  void _showLoanDialog(BuildContext context, AppState state) {
+// Loans Simulator Dialog
+void showLoanDialog(BuildContext context, AppState state) {
     double selectedAmount = 5000;
     int selectedMonths = 12;
     double interestRate = 0.145; // 14.5% annual
@@ -1781,8 +2440,8 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  // Change Password
-  void _showChangeClaveDialog(BuildContext context, AppState state) {
+// Change Password
+void showChangeClaveDialog(BuildContext context, AppState state) {
     final currentController = TextEditingController();
     final newController = TextEditingController();
     final confirmController = TextEditingController();
@@ -1843,7 +2502,7 @@ class ProfileTab extends StatelessWidget {
                       onVerified: () {
                         state.changeClave(newController.text);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Clave modificada exitosamente. Úsela en su próximo inicio de sesión")),
+                          const SnackBar(content: Text("Clave modificada exitosamente. íšsela en su próximo inicio de sesión")),
                         );
                       },
                     ),
@@ -1862,8 +2521,8 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  // Contact support hotline dialog
-  void _showContactanosDialog(BuildContext context) {
+// Contact support hotline dialog
+void showContactanosDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -1918,7 +2577,6 @@ class ProfileTab extends StatelessWidget {
       },
     );
   }
-}
 
 // ------------------ OPERATIONAL SUB-FLOWS ------------------
 
@@ -1990,37 +2648,28 @@ class _TransferSameBankFlowState extends State<TransferSameBankFlow> {
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 FocusScope.of(context).unfocus();
-                // Show verification
+                double amount = double.parse(_amountController.text);
+                state.transferSameBank(_accountController.text, amount, _refController.text);
+                
+                // Show receipt
                 showDialog(
                   context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Transferencia BN de S/ ${_amountController.text} a la cuenta ${_accountController.text}",
-                    onVerified: () {
-                      double amount = double.parse(_amountController.text);
-                      state.transferSameBank(_accountController.text, amount, _refController.text);
-                      
-                      // Show receipt
-                      showDialog(
-                        context: context,
-                        builder: (c) => TransactionReceiptDialog(
-                          title: "Transferencia a Cuenta BN",
-                          receiptDetails: [
-                            {"label": "Destinatario", "value": "ANDREA CASTRO ROJAS"},
-                            {"label": "Cuenta Destino", "value": _accountController.text},
-                            {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
-                            {"label": "Concepto", "value": _refController.text},
-                            {"label": "Fecha y Hora", "value": DateTime.now().toString().substring(0, 19)},
-                            {"label": "N° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
-                          ],
-                        ),
-                      );
-                      // Clear form
-                      _accountController.clear();
-                      _amountController.clear();
-                      _refController.clear();
-                    },
+                  builder: (c) => TransactionReceiptDialog(
+                    title: "Transferencia a Cuenta BN",
+                    receiptDetails: [
+                      {"label": "Destinatario", "value": "ANDREA CASTRO ROJAS"},
+                      {"label": "Cuenta Destino", "value": _accountController.text},
+                      {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
+                      {"label": "Concepto", "value": _refController.text},
+                      {"label": "Fecha y Hora", "value": DateTime.now().toString().substring(0, 19)},
+                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                    ],
                   ),
                 );
+                // Clear form
+                _accountController.clear();
+                _amountController.clear();
+                _refController.clear();
               }
             },
           )
@@ -2163,35 +2812,27 @@ class _TransferCellularFlowState extends State<TransferCellularFlow> {
               if (_formKey.currentState!.validate()) {
                 FocusScope.of(context).unfocus();
                 String name = _nameController.text.isEmpty ? "Destinatario Móvil" : _nameController.text;
+                double amount = double.parse(_amountController.text);
+                state.transferCellular(_phoneController.text, name, amount, _selectedBank);
+                
                 showDialog(
                   context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Envío de S/ ${_amountController.text} vía $_selectedBank al celular ${_phoneController.text}",
-                    onVerified: () {
-                      double amount = double.parse(_amountController.text);
-                      state.transferCellular(_phoneController.text, name, amount, _selectedBank);
-                      
-                      showDialog(
-                        context: context,
-                        builder: (c) => TransactionReceiptDialog(
-                          title: "Transferencia a Celular ($_selectedBank)",
-                          receiptDetails: [
-                            {"label": "Destinatario", "value": name},
-                            {"label": "Celular", "value": _phoneController.text},
-                            {"label": "Billetera/Banco", "value": _selectedBank},
-                            {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
-                            {"label": "Comisión", "value": "Gratuito (TIN Especial)"},
-                            {"label": "N° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
-                          ],
-                        ),
-                      );
-                      
-                      _phoneController.clear();
-                      _amountController.clear();
-                      _nameController.clear();
-                    },
+                  builder: (c) => TransactionReceiptDialog(
+                    title: "Transferencia a Celular ($_selectedBank)",
+                    receiptDetails: [
+                      {"label": "Destinatario", "value": name},
+                      {"label": "Celular", "value": _phoneController.text},
+                      {"label": "Billetera/Banco", "value": _selectedBank},
+                      {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
+                      {"label": "Comisión", "value": "Gratuito (TIN Especial)"},
+                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                    ],
                   ),
                 );
+                
+                _phoneController.clear();
+                _amountController.clear();
+                _nameController.clear();
               }
             },
           )
@@ -2299,35 +2940,27 @@ class _TransferInterbankFlowState extends State<TransferInterbankFlow> {
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 FocusScope.of(context).unfocus();
+                double amount = double.parse(_amountController.text);
+                state.transferInterbank(_cciController.text, _nameController.text, amount, _isInmediate);
+                
                 showDialog(
                   context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Transferencia Interbancaria ${_isInmediate ? 'Inmediata' : 'Diferida'} de S/ ${_amountController.text} a ${_nameController.text}",
-                    onVerified: () {
-                      double amount = double.parse(_amountController.text);
-                      state.transferInterbank(_cciController.text, _nameController.text, amount, _isInmediate);
-                      
-                      showDialog(
-                        context: context,
-                        builder: (c) => TransactionReceiptDialog(
-                          title: "Transferencia Interbancaria",
-                          receiptDetails: [
-                            {"label": "Titular Destino", "value": _nameController.text},
-                            {"label": "CCI", "value": _cciController.text},
-                            {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
-                            {"label": "Modalidad", "value": _isInmediate ? "Inmediata" : "Diferida"},
-                            {"label": "Comisión", "value": _isInmediate ? "S/ 3.50" : (amount <= 500 ? "Gratis" : "S/ 1.50")},
-                            {"label": "N° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
-                          ],
-                        ),
-                      );
-                      
-                      _cciController.clear();
-                      _nameController.clear();
-                      _amountController.clear();
-                    },
+                  builder: (c) => TransactionReceiptDialog(
+                    title: "Transferencia Interbancaria",
+                    receiptDetails: [
+                      {"label": "Titular Destino", "value": _nameController.text},
+                      {"label": "CCI", "value": _cciController.text},
+                      {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
+                      {"label": "Modalidad", "value": _isInmediate ? "Inmediata" : "Diferida"},
+                      {"label": "Comisión", "value": _isInmediate ? "S/ 3.50" : (amount <= 500 ? "Gratis" : "S/ 1.50")},
+                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                    ],
                   ),
                 );
+                
+                _cciController.clear();
+                _nameController.clear();
+                _amountController.clear();
               }
             },
           )
@@ -2412,33 +3045,25 @@ class _PayCreditCardFlowState extends State<PayCreditCardFlow> {
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 FocusScope.of(context).unfocus();
+                double amount = double.parse(_amountController.text);
+                state.payCreditCard(_selectedBank, _cardNoController.text, amount);
+                
                 showDialog(
                   context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Pago de Tarjeta de Crédito $_selectedBank **** ${_cardNoController.text.substring(12)} por S/ ${_amountController.text}",
-                    onVerified: () {
-                      double amount = double.parse(_amountController.text);
-                      state.payCreditCard(_selectedBank, _cardNoController.text, amount);
-                      
-                      showDialog(
-                        context: context,
-                        builder: (c) => TransactionReceiptDialog(
-                          title: "Pago de Tarjeta de Crédito",
-                          receiptDetails: [
-                            {"label": "Banco", "value": _selectedBank},
-                            {"label": "N° Tarjeta", "value": "**** **** **** ${_cardNoController.text.substring(12)}"},
-                            {"label": "Monto Pagado", "value": "S/ ${amount.toStringAsFixed(2)}"},
-                            {"label": "Tipo de Pago", "value": "Inmediato"},
-                            {"label": "N° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
-                          ],
-                        ),
-                      );
-                      
-                      _cardNoController.clear();
-                      _amountController.clear();
-                    },
+                  builder: (c) => TransactionReceiptDialog(
+                    title: "Pago de Tarjeta de Crédito",
+                    receiptDetails: [
+                      {"label": "Banco", "value": _selectedBank},
+                      {"label": "NÂ° Tarjeta", "value": "**** **** **** ${_cardNoController.text.substring(12)}"},
+                      {"label": "Monto Pagado", "value": "S/ ${amount.toStringAsFixed(2)}"},
+                      {"label": "Tipo de Pago", "value": "Inmediato"},
+                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                    ],
                   ),
                 );
+                
+                _cardNoController.clear();
+                _amountController.clear();
               }
             },
           )
@@ -2599,36 +3224,28 @@ class _PayServiceFlowState extends State<PayServiceFlow> {
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   FocusScope.of(context).unfocus();
+                  double amount = double.parse(_amountController.text);
+                  state.payService(widget.serviceType, _selectedCompany, _supplyCodeController.text, amount);
+                  
                   showDialog(
                     context: context,
-                    builder: (context) => CddVerificationDialog(
-                      operationDetails: "Pago de Servicio $widget.serviceType ($_selectedCompany) - S/ ${_amountController.text}",
-                      onVerified: () {
-                        double amount = double.parse(_amountController.text);
-                        state.payService(widget.serviceType, _selectedCompany, _supplyCodeController.text, amount);
-                        
-                        showDialog(
-                          context: context,
-                          builder: (c) => TransactionReceiptDialog(
-                            title: "Pago de Servicio Realizado",
-                            receiptDetails: [
-                              {"label": "Servicio", "value": widget.serviceType},
-                              {"label": "Empresa", "value": _selectedCompany},
-                              {"label": "Suministro/Cliente", "value": _supplyCodeController.text},
-                              {"label": "Monto Pagado", "value": "S/ ${amount.toStringAsFixed(2)}"},
-                              {"label": "N° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
-                            ],
-                          ),
-                        );
-                        
-                        setState(() {
-                          _isDebtQueried = false;
-                        });
-                        _supplyCodeController.clear();
-                        _amountController.clear();
-                      },
+                    builder: (c) => TransactionReceiptDialog(
+                      title: "Pago de Servicio Realizado",
+                      receiptDetails: [
+                        {"label": "Servicio", "value": widget.serviceType},
+                        {"label": "Empresa", "value": _selectedCompany},
+                        {"label": "Suministro/Cliente", "value": _supplyCodeController.text},
+                        {"label": "Monto Pagado", "value": "S/ ${amount.toStringAsFixed(2)}"},
+                        {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                      ],
                     ),
                   );
+                  
+                  setState(() {
+                    _isDebtQueried = false;
+                  });
+                  _supplyCodeController.clear();
+                  _amountController.clear();
                 }
               },
             ),
@@ -2737,30 +3354,22 @@ class _RechargeFlowState extends State<RechargeFlow> {
                   return;
                 }
                 FocusScope.of(context).unfocus();
+                state.rechargeCellular(_selectedOperator, _phoneController.text, _selectedAmount);
+                
                 showDialog(
                   context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Recarga celular $_selectedOperator al ${_phoneController.text} por S/ ${_selectedAmount.toStringAsFixed(2)}",
-                    onVerified: () {
-                      state.rechargeCellular(_selectedOperator, _phoneController.text, _selectedAmount);
-                      
-                      showDialog(
-                        context: context,
-                        builder: (c) => TransactionReceiptDialog(
-                          title: "Recarga Realizada",
-                          receiptDetails: [
-                            {"label": "Operador", "value": _selectedOperator},
-                            {"label": "N° Celular", "value": _phoneController.text},
-                            {"label": "Monto Recargado", "value": "S/ ${_selectedAmount.toStringAsFixed(2)}"},
-                            {"label": "N° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
-                          ],
-                        ),
-                      );
-                      
-                      _phoneController.clear();
-                    },
+                  builder: (c) => TransactionReceiptDialog(
+                    title: "Recarga Realizada",
+                    receiptDetails: [
+                      {"label": "Operador", "value": _selectedOperator},
+                      {"label": "NÂ° Celular", "value": _phoneController.text},
+                      {"label": "Monto Recargado", "value": "S/ ${_selectedAmount.toStringAsFixed(2)}"},
+                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                    ],
                   ),
                 );
+                
+                _phoneController.clear();
               }
             },
           )
@@ -2863,116 +3472,108 @@ class _EmitGiroFlowState extends State<EmitGiroFlow> {
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 FocusScope.of(context).unfocus();
+                double amount = double.parse(_amountController.text);
+                String code = state.emitGiro(_nameController.text, _dniController.text, amount);
+                
+                // Find the newly generated giro details
+                final g = state.giros.firstWhere((x) => x.giroCode == code);
+                
                 showDialog(
                   context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Emisión de giro de S/ ${_amountController.text} a favor de ${_nameController.text} DNI ${_dniController.text}",
-                    onVerified: () {
-                      double amount = double.parse(_amountController.text);
-                      String code = state.emitGiro(_nameController.text, _dniController.text, amount);
-                      
-                      // Find the newly generated giro details
-                      final g = state.giros.firstWhere((x) => x.giroCode == code);
-                      
-                      showDialog(
-                        context: context,
-                        builder: (c) => Dialog(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
+                  builder: (c) => Dialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.send_rounded, color: kBnRed, size: 54),
+                          const SizedBox(height: 12),
+                          const Text("Giro Emitido Exitosamente", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: kBnRed)),
+                          const Divider(height: 24),
+                          const Text("ENTREGUE ESTAS CLAVES A SU BENEFICIARIO", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: kBnTextLight)),
+                          const SizedBox(height: 16),
+                          
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            color: Colors.grey[100],
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Icon(Icons.send_rounded, color: kBnRed, size: 54),
-                                const SizedBox(height: 12),
-                                const Text("Giro Emitido Exitosamente", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: kBnRed)),
-                                const Divider(height: 24),
-                                const Text("ENTREGUE ESTAS CLAVES A SU BENEFICIARIO", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: kBnTextLight)),
-                                const SizedBox(height: 16),
-                                
-                                Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                  color: Colors.grey[100],
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text("Código de Giro:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                      Text(g.giroCode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: kBnRed, letterSpacing: 1.5)),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                  color: Colors.grey[100],
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text("Clave de Cobro (4 dig):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                      Text(g.giroKey, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: kBnRed, letterSpacing: 2)),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text("Beneficiario:", style: TextStyle(fontSize: 12)),
-                                    Text(g.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text("DNI:", style: TextStyle(fontSize: 12)),
-                                    Text(g.dni, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text("Monto del Giro:", style: TextStyle(fontSize: 12)),
-                                    Text("S/ ${g.amount.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text("Tarifa Cobrada:", style: TextStyle(fontSize: 12)),
-                                    const Text("S/ 3.00", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                                const Divider(height: 24),
-                                const Text("El cobro puede realizarse en agencias BN o Agentes MultiRed a nivel nacional.", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: kBnTextLight)),
-                                const SizedBox(height: 20),
-                                BnButton(
-                                  text: "Compartir Claves",
-                                  icon: Icons.share,
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Claves del giro enviadas por WhatsApp")),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 8),
-                                BnButton(
-                                  text: "Listo",
-                                  isSecondary: true,
-                                  onPressed: () => Navigator.pop(context),
-                                ),
+                                const Text("Código de Giro:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text(g.giroCode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: kBnRed, letterSpacing: 1.5)),
                               ],
                             ),
                           ),
-                        ),
-                      );
-                      
-                      _dniController.clear();
-                      _nameController.clear();
-                      _amountController.clear();
-                    },
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            color: Colors.grey[100],
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text("Clave de Cobro (4 dig):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text(g.giroKey, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: kBnRed, letterSpacing: 2)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Beneficiario:", style: TextStyle(fontSize: 12)),
+                              Text(g.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("DNI:", style: TextStyle(fontSize: 12)),
+                              Text(g.dni, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Monto del Giro:", style: TextStyle(fontSize: 12)),
+                              Text("S/ ${g.amount.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Tarifa Cobrada:", style: TextStyle(fontSize: 12)),
+                              const Text("S/ 3.00", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          const Text("El cobro puede realizarse en agencias BN o Agentes MultiRed a nivel nacional.", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: kBnTextLight)),
+                          const SizedBox(height: 20),
+                          BnButton(
+                            text: "Compartir Claves",
+                            icon: Icons.share,
+                            onPressed: () {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Claves del giro enviadas por WhatsApp")),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          BnButton(
+                            text: "Listo",
+                            isSecondary: true,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
+                
+                _dniController.clear();
+                _nameController.clear();
+                _amountController.clear();
               }
             },
           )
@@ -3138,21 +3739,13 @@ class _CardlessWithdrawalFlowState extends State<CardlessWithdrawalFlow> {
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 FocusScope.of(context).unfocus();
-                showDialog(
-                  context: context,
-                  builder: (context) => CddVerificationDialog(
-                    operationDetails: "Generación de código de retiro sin tarjeta por S/ ${_amountController.text}",
-                    onVerified: () {
-                      double amount = double.parse(_amountController.text);
-                      String code = state.generateRetiroSinTarjeta(amount);
-                      setState(() {
-                        _generatedCode = code;
-                      });
-                      _startTimer();
-                      _amountController.clear();
-                    },
-                  ),
-                );
+                double amount = double.parse(_amountController.text);
+                String code = state.generateRetiroSinTarjeta(amount);
+                setState(() {
+                  _generatedCode = code;
+                });
+                _startTimer();
+                _amountController.clear();
               }
             },
           ),
@@ -3162,378 +3755,349 @@ class _CardlessWithdrawalFlowState extends State<CardlessWithdrawalFlow> {
   }
 }
 
-class SimpleDashboardView extends StatefulWidget {
+class SimpleDashboardView extends StatelessWidget {
   final AppState state;
   const SimpleDashboardView({super.key, required this.state});
 
   @override
-  State<SimpleDashboardView> createState() => _SimpleDashboardViewState();
-}
-
-class _SimpleDashboardViewState extends State<SimpleDashboardView> {
-  String? _activeSimpleFlow;
-
-  @override
   Widget build(BuildContext context) {
-    final state = widget.state;
+    // â”€â”€ Controls bar (language + font size) pinned at the very top â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Widget controlsBar = Container(
+      color: kBnRed,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Language row
+          Row(
+            children: [
+              _langBtn(context, 'ES', 'ESPAí‘OL'),
+              const SizedBox(width: 6),
+              _langBtn(context, 'QU', 'QUECHUA'),
+              const SizedBox(width: 6),
+              _langBtn(context, 'AY', 'AYMARA'),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // Font size row
+          Row(
+            children: [
+              _fontBtn(context, 1.0, 'A', 'NORMAL'),
+              const SizedBox(width: 6),
+              _fontBtn(context, 1.3, 'A+', 'GRANDE'),
+              const SizedBox(width: 6),
+              _fontBtn(context, 1.6, 'A++', 'MUY GRANDE'),
+            ],
+          ),
+        ],
+      ),
+    );
 
-    // Sub flows when clicked
-    if (_activeSimpleFlow != null) {
-      Widget flowWidget = Container();
-      String title = "";
-      if (_activeSimpleFlow == "saldos") {
-        flowWidget = _SimpleSaldosView(state: state);
-        title = state.t('CuentaAhorros');
-      } else if (_activeSimpleFlow == "trans_bn") {
-        flowWidget = const TransferSameBankFlow();
-        title = "Transferir Mismo Banco";
-      } else if (_activeSimpleFlow == "trans_inter") {
-        flowWidget = const TransferInterbankFlow();
-        title = "Transferir Interbancario";
-      } else if (_activeSimpleFlow == "trans_cell") {
-        flowWidget = const TransferCellularFlow();
-        title = "Transferir a Celular (Yape/Plin)";
-      } else if (_activeSimpleFlow == "pay_water") {
-        flowWidget = const PayServiceFlow(serviceType: "Agua");
-        title = "Pagar Agua";
-      } else if (_activeSimpleFlow == "pay_electricity") {
-        flowWidget = const PayServiceFlow(serviceType: "Luz");
-        title = "Pagar Luz";
-      } else if (_activeSimpleFlow == "recharge") {
-        flowWidget = const RechargeFlow();
-        title = "Recargar Celular";
-      } else if (_activeSimpleFlow == "giro") {
-        flowWidget = const EmitGiroFlow();
-        title = "Emitir Giro";
-      } else if (_activeSimpleFlow == "withdrawal") {
-        flowWidget = const CardlessWithdrawalFlow();
-        title = "Retiro sin Tarjeta";
-      }
-
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kBnRed,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                state.speak(state.currentLanguage == 'ES' ? "Regresando al menú simple" : "Kutichkani menu simplicitaman");
-                setState(() {
-                  _activeSimpleFlow = null;
-                });
-              },
-              icon: const Icon(Icons.arrow_back),
-              label: Text("VOLVER / KUTIY", style: TextStyle(fontSize: 16 * state.fontSizeMultiplier, fontWeight: FontWeight.bold)),
+    // â”€â”€ Main scrollable button list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Widget _btn({
+      required IconData icon,
+      required String labelES,
+      required String labelQU,
+      required String labelAY,
+      required Color color,
+      required VoidCallback onTap,
+    }) {
+      final label = state.currentLanguage == 'ES'
+          ? labelES
+          : state.currentLanguage == 'QU'
+              ? labelQU
+              : labelAY;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: SizedBox(
+          height: 82,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
             ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: TextStyle(fontSize: 18 * state.fontSizeMultiplier, fontWeight: FontWeight.bold, color: kBnRed),
-              textAlign: TextAlign.center,
+            onPressed: onTap,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+                  child: Icon(icon, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14 * state.fontSizeMultiplier,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, color: Colors.white60, size: 18),
+              ],
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: SingleChildScrollView(
-                child: flowWidget,
-              ),
-            ),
-          ],
+          ),
         ),
       );
     }
 
-    // Main simple menu grid
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+    Widget buttonList = SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // LANGUAGE SELECTORS BAR
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.currentLanguage == 'ES' ? kBnRed : Colors.white,
-                      foregroundColor: state.currentLanguage == 'ES' ? Colors.white : kBnRed,
-                      side: const BorderSide(color: kBnRed),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setLanguage('ES'),
-                    child: Text("ESPAÑOL", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * state.fontSizeMultiplier)),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.currentLanguage == 'QU' ? kBnRed : Colors.white,
-                      foregroundColor: state.currentLanguage == 'QU' ? Colors.white : kBnRed,
-                      side: const BorderSide(color: kBnRed),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setLanguage('QU'),
-                    child: Text("QUECHUA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * state.fontSizeMultiplier)),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.currentLanguage == 'AY' ? kBnRed : Colors.white,
-                      foregroundColor: state.currentLanguage == 'AY' ? Colors.white : kBnRed,
-                      side: const BorderSide(color: kBnRed),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setLanguage('AY'),
-                    child: Text("AYMARA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * state.fontSizeMultiplier)),
-                  ),
-                ),
-              ),
-            ],
+          // ── Volver a Vista Normal ──────────────────────────────────────────
+          _btn(
+            icon: Icons.restore,
+            labelES: "VOLVER A VISTA NORMAL",
+            labelQU: "KUTIY NORMALMAN",
+            labelAY: "KUTIÑA NORMALMAN",
+            color: Colors.grey.shade700,
+            onTap: () {
+              state.speak(state.currentLanguage == 'ES' ? "Volviendo a vista normal." : "Kutiy normalman.");
+              state.toggleSimpleMode();
+            },
           ),
-          const SizedBox(height: 12),
-
-          // FONT SIZE BAR (Normal | Grande | Muy Grande)
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.fontSizeMultiplier == 1.0 ? Colors.black87 : Colors.white,
-                      foregroundColor: state.fontSizeMultiplier == 1.0 ? Colors.white : Colors.black87,
-                      side: const BorderSide(color: Colors.black87),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setFontSizeMultiplier(1.0),
-                    child: const Text("NORMAL", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.fontSizeMultiplier == 1.3 ? Colors.black87 : Colors.white,
-                      foregroundColor: state.fontSizeMultiplier == 1.3 ? Colors.white : Colors.black87,
-                      side: const BorderSide(color: Colors.black87),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setFontSizeMultiplier(1.3),
-                    child: const Text("GRANDE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.fontSizeMultiplier == 1.6 ? Colors.black87 : Colors.white,
-                      foregroundColor: state.fontSizeMultiplier == 1.6 ? Colors.white : Colors.black87,
-                      side: const BorderSide(color: Colors.black87),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => state.setFontSizeMultiplier(1.6),
-                    child: const Text("MUY GRANDE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // LARGE RECTANGULAR BUTTONS
-          _simpleRectButton(
+          // ── Saldos ─────────────────────────────────────────────────────────
+          _btn(
             icon: Icons.account_balance_wallet,
-            label: state.currentLanguage == 'ES' ? "CONSULTAR SALDOS Y MOVIMIENTOS" :
-                   state.currentLanguage == 'QU' ? "QULLQI YUPAY QHAWARIY" : "QULLQI UÑJAÑA CHIKURU",
+            labelES: "VER MI PLATA Y MOVIMIENTOS",
+            labelQU: "QULLQI YUPAY QHAWARIY",
+            labelAY: "QULLQI Uí‘JAí‘A CHIKURU",
             color: Colors.teal.shade800,
             onTap: () {
-              state.speak("Abriendo consulta de saldos y movimientos.");
-              setState(() => _activeSimpleFlow = "saldos");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo su cuenta para ver cuánta plata tiene."
+                  : "Qolqe qhaway.");
+              state.setTab(0);
+              state.toggleSimpleMode(); // regresa al modo clásico para ver HomeTab
+              // pequeña demora para que toggleSimpleMode surta efecto
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Transferir mismo banco â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.swap_horiz,
-            label: state.currentLanguage == 'ES' ? "TRANSFERIR MISMO BANCO" : "BN ASTACHIY",
+            labelES: "MANDAR PLATA AL MISMO BANCO",
+            labelQU: "BN ASTACHIY",
+            labelAY: "BN APACHIRI",
             color: Colors.blue.shade800,
             onTap: () {
-              state.speak("Abriendo transferencias al mismo banco.");
-              setState(() => _activeSimpleFlow = "trans_bn");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo sección para mandar plata al mismo banco."
+                  : "BN astachiy.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const TransferAccountsScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
-            icon: Icons.account_balance,
-            label: state.currentLanguage == 'ES' ? "TRANSFERIR INTERBANCARIO" : "INTERBANCARIA ASTACHIY",
-            color: Colors.indigo.shade800,
-            onTap: () {
-              state.speak("Abriendo transferencias interbancarias.");
-              setState(() => _activeSimpleFlow = "trans_inter");
-            },
-            state: state,
-          ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Transferir por celular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.phone_android,
-            label: state.currentLanguage == 'ES' ? "TRANSFERIR POR CELULAR (YAPE/PLIN)" : "YAPE / PLIN ENVIAR",
+            labelES: "MANDAR PLATA POR CELULAR (YAPE/PLIN)",
+            labelQU: "YAPE / PLIN ENVIAR",
+            labelAY: "CELULAR APACHIRI",
             color: Colors.purple.shade800,
             onTap: () {
-              state.speak("Abriendo transferencia celular por Yape y Plin.");
-              setState(() => _activeSimpleFlow = "trans_cell");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo sección para mandar plata por celular a Yape o Plin."
+                  : "Yape Plin apachiy.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const TransferCellularScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Pagar agua â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.water_drop,
-            label: state.currentLanguage == 'ES' ? "PAGAR RECIBO DE AGUA" : "YAKUTA PAGAY",
+            labelES: "PAGAR RECIBO DE AGUA",
+            labelQU: "YAKUTA PAGAY",
+            labelAY: "UNO PAGAí‘A",
             color: Colors.cyan.shade800,
             onTap: () {
-              state.speak("Abriendo pago de agua.");
-              setState(() => _activeSimpleFlow = "pay_water");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo pago de agua."
+                  : "Unu pagay.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const PagosRecargasScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Pagar luz â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.bolt,
-            label: state.currentLanguage == 'ES' ? "PAGAR RECIBO DE LUZ" : "K'ANCHAYTA PAGAY",
+            labelES: "PAGAR RECIBO DE LUZ",
+            labelQU: "K'ANCHAYTA PAGAY",
+            labelAY: "LUSAT PAGAí‘A",
             color: Colors.amber.shade900,
             onTap: () {
-              state.speak("Abriendo pago de luz.");
-              setState(() => _activeSimpleFlow = "pay_electricity");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo pago de luz."
+                  : "Luz pagay.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const PagosRecargasScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Recargar celular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.smartphone,
-            label: state.currentLanguage == 'ES' ? "RECARGAR CELULAR" : "CELULARTA WINAY",
+            labelES: "RECARGAR CELULAR",
+            labelQU: "CELULARTA WINAY",
+            labelAY: "CELULAR WINJAí‘A",
             color: Colors.green.shade800,
             onTap: () {
-              state.speak("Abriendo recarga de celular.");
-              setState(() => _activeSimpleFlow = "recharge");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo recarga de celular."
+                  : "Celular recarga.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const PagosRecargasScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Emitir giro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.send_to_mobile,
-            label: state.currentLanguage == 'ES' ? "EMITIR GIRO MULTIRED" : "GIRO EMITIY",
+            labelES: "EMITIR GIRO MULTIRED",
+            labelQU: "GIRO EMITIY",
+            labelAY: "GIRO LURAí‘A",
             color: Colors.deepOrange.shade800,
             onTap: () {
-              state.speak("Abriendo emisión de giros.");
-              setState(() => _activeSimpleFlow = "giro");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo emisión de giro MultiRed."
+                  : "Giro emitiy.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const GirosScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Retiro sin tarjeta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.no_accounts,
-            label: state.currentLanguage == 'ES' ? "RETIRO SIN TARJETA" : "RETIRO SIN TARJETA RURAY",
+            labelES: "RETIRO SIN TARJETA",
+            labelQU: "TARJETA ILLAJPI ORQOY",
+            labelAY: "TARJETA JANIWA ORAQAí‘A",
             color: Colors.blueGrey.shade800,
             onTap: () {
-              state.speak("Abriendo retiro sin tarjeta.");
-              setState(() => _activeSimpleFlow = "withdrawal");
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo retiro sin tarjeta."
+                  : "Retiro sin tarjeta.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const RetiroSinTarjetaScreen(),
+              ));
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
-            icon: Icons.warning_rounded,
-            label: state.isCardBlocked 
-                ? (state.currentLanguage == 'ES' ? "DESBLOQUEAR TARJETA" : "TARJETA KAWSARICHIY")
-                : (state.currentLanguage == 'ES' ? "BLOQUEAR TARJETA DE INMEDIATO" : "TARJETA HARK'AY KUNANPUNI"),
+          // â”€â”€ Préstamos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
+            icon: Icons.monetization_on_outlined,
+            labelES: "SOLICITAR PRí‰STAMO",
+            labelQU: "QOLLQE MAí‘AKUY",
+            labelAY: "QULLQI MAí‘Aí‘A",
+            color: Colors.indigo.shade800,
+            onTap: () {
+              state.speak(state.currentLanguage == 'ES'
+                  ? "Abriendo simulador de préstamos."
+                  : "Préstamo mañakuy.");
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const LoanScreen(),
+              ));
+            },
+          ),
+          // â”€â”€ Bloquear tarjeta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
+            icon: state.isCardBlocked ? Icons.lock_open : Icons.warning_rounded,
+            labelES: state.isCardBlocked ? "DESBLOQUEAR TARJETA" : "BLOQUEAR TARJETA DE INMEDIATO",
+            labelQU: state.isCardBlocked ? "TARJETA KAWSARICHIY" : "TARJETA HARK'AY KUNANPUNI",
+            labelAY: state.isCardBlocked ? "TARJETA KATAí‘A" : "TARJETA JARK'ANTAí‘A",
             color: kBnRed,
             onTap: () {
               if (state.isCardBlocked) {
                 state.unblockCard();
-                state.speak("Tarjeta desbloqueada.");
+                state.speak(state.currentLanguage == 'ES' ? "Tarjeta desbloqueada." : "Tarjeta kawsarichisqa.");
               } else {
-                state.blockCard("Solicitado en modo simple");
-                state.speak("Tarjeta bloqueada por seguridad.");
+                state.blockCard("Solicitado en modo fácil");
+                state.speak(state.currentLanguage == 'ES' ? "Tarjeta bloqueada por seguridad." : "Tarjeta harkarisqa.");
               }
             },
-            state: state,
           ),
-          const SizedBox(height: 12),
-          _simpleRectButton(
+          // â”€â”€ Cerrar sesión â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _btn(
             icon: Icons.exit_to_app,
-            label: state.currentLanguage == 'ES' ? "CERRAR SESIÓN / SALIR" : "LLUQSIY / SAQIRIY",
-            color: Colors.grey.shade900,
+            labelES: "CERRAR SESIí“N / SALIR",
+            labelQU: "LLUQSIY / SAQIRIY",
+            labelAY: "MISTUí‘A / SARTAí‘A",
+            color: Colors.grey.shade800,
             onTap: () {
               state.logout();
               Navigator.pushReplacementNamed(context, '/login');
             },
-            state: state,
           ),
-          const SizedBox(height: 20),
         ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        controlsBar,
+        Expanded(child: buttonList),
+      ],
+    );
+  }
+
+  // â”€â”€ Helper: language button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  Widget _langBtn(BuildContext context, String lang, String label) {
+    final isActive = state.currentLanguage == lang;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => state.setLanguage(lang),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 34,
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white : Colors.white24,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? kBnRed : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 11 * state.fontSizeMultiplier,
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _simpleRectButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required AppState state,
-  }) {
-    return Container(
-      height: 90,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-        ),
-        onPressed: onTap,
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Colors.white24,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.white, size: 32),
+  // â”€â”€ Helper: font size button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  Widget _fontBtn(BuildContext context, double mult, String symbol, String label) {
+    final isActive = state.fontSizeMultiplier == mult;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => state.setFontSizeMultiplier(mult),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 30,
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white : Colors.white24,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            "$symbol  $label",
+            style: TextStyle(
+              color: isActive ? kBnRed : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
             ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15 * state.fontSizeMultiplier,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
-          ],
+          ),
         ),
       ),
     );
@@ -3565,7 +4129,7 @@ class _SimpleSaldosView extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "N° ${state.accountNo}",
+                  "NÂ° ${state.accountNo}",
                   style: TextStyle(color: Colors.white70, fontSize: 13 * state.fontSizeMultiplier),
                 ),
                 const SizedBox(height: 20),
@@ -3619,6 +4183,1881 @@ class _SimpleSaldosView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class NormalNavigationDrawer extends StatelessWidget {
+  const NormalNavigationDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = Provider.of<AppState>(context);
+    const themeColor = Color(0xFF1A1A1B);
+    const accentTeal = Color(0xFF40E0D0);
+    const accentOrange = Color(0xFFF25B2A);
+
+    // Navigation helper
+    void navigateTo(int tabIndex, {String flow = "menu", String securitySubFlow = "menu", VoidCallback? postNavigation}) {
+      state.setTab(tabIndex);
+      state.setOperationsFlow(flow);
+      state.setSecuritySubFlow(securitySubFlow);
+      Navigator.pop(context); // Close drawer
+      if (postNavigation != null) {
+        Future.delayed(const Duration(milliseconds: 150), postNavigation);
+      }
+    }
+
+    return Drawer(
+      child: Container(
+        color: themeColor,
+        child: Column(
+          children: [
+            // USER HEADER
+            Padding(
+              padding: const EdgeInsets.only(top: 50, left: 16, right: 16, bottom: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Profile Avatar Box
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              state.name.isNotEmpty ? state.name[0] : "C",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          // Edit overlay icon
+                          Positioned(
+                            top: -4,
+                            right: -4,
+                            child: CircleAvatar(
+                              radius: 8,
+                              backgroundColor: Colors.grey.shade700,
+                              child: const Icon(
+                                Icons.edit,
+                                size: 9,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      // User greeting
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "¡Hola!",
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            "CARLOS\nALBERTO R.",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  // Mi QR Button
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const MiQrScreen()));
+                    },
+                    child: Container(
+                      width: 64,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: accentTeal, width: 1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.qr_code, color: accentTeal, size: 22),
+                          SizedBox(height: 2),
+                          Text(
+                            "Mi QR",
+                            style: TextStyle(
+                              color: accentTeal,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // MENU ITEMS LIST
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                children: [
+                  // 0. Toggle Adulto Mayor (High Contrast)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade400,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2))],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            "ACTIVAR VISTA ADULTO MAYOR",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        Switch(
+                          value: state.simpleModeEnabled,
+                          onChanged: (val) {
+                            Navigator.pop(context); // Close drawer
+                            Future.delayed(const Duration(milliseconds: 200), () => state.toggleSimpleMode());
+                          },
+                          activeColor: Colors.white,
+                          activeTrackColor: Colors.green.shade800,
+                          inactiveThumbColor: Colors.grey.shade300,
+                          inactiveTrackColor: Colors.grey.shade600,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // 1. Mis cuentas
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.analytics_outlined, size: 22),
+                    title: "Mis cuentas",
+                    isSelected: state.currentTab == 0,
+                    onTap: () => navigateTo(0),
+                  ),
+                  // 2. Actualización de datos
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.person_outline, size: 22),
+                    title: "Actualización de datos",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
+                    },
+                  ),
+                  // 3. Transferir por celular o QR
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.phone_android_outlined, size: 22),
+                    title: "Transferir por Celular (Yape, Plin, BCP)",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const TransferCellularScreen()));
+                    },
+                  ),
+                  // 4. Transferir a cuentas
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.swap_horiz, size: 22),
+                    title: "Transferir a cuentas",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const TransferAccountsScreen()));
+                    },
+                  ),
+                  // 5. Giros
+                  _drawerItem(
+                    iconWidget: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "S/",
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    title: "Giros",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const GirosScreen()));
+                    },
+                  ),
+                  // 6. Pagos y recargas
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.payments_outlined, size: 22),
+                    title: "Pagos y recargas",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const PagosRecargasScreen()));
+                    },
+                  ),
+                  // 7. Retiro sin tarjeta
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.credit_card_outlined, size: 22),
+                    title: "Retiro sin tarjeta",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const RetiroSinTarjetaScreen()));
+                    },
+                  ),
+                  // 8. Préstamos
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.monetization_on_outlined, size: 22),
+                    title: "Préstamos",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoanScreen()));
+                    },
+                  ),
+                  // 9. Planes Sociales
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.volunteer_activism_outlined, size: 22),
+                    title: "Planes Sociales y Bonos",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SocialPlansScreen()));
+                    },
+                  ),
+                  // 9. Configuración y seguridad
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.lock_outline, size: 22),
+                    title: "Configuración y seguridad",
+                    isSelected: state.currentTab == 2 && state.securitySubFlow == "menu",
+                    onTap: () => navigateTo(2, securitySubFlow: "menu"),
+                  ),
+                  if (state.currentTab == 2) ...[
+                    _drawerSubItem(
+                      iconWidget: const Icon(Icons.credit_card_off_outlined, size: 18),
+                      title: "Bloqueo de tarjetas",
+                      isSelected: state.currentTab == 2 && state.securitySubFlow == "bloqueo",
+                      onTap: () => navigateTo(2, securitySubFlow: "bloqueo"),
+                    ),
+                    _drawerSubItem(
+                      iconWidget: const Icon(Icons.lock_open_outlined, size: 18),
+                      title: "Clave Dinámica Digital",
+                      isSelected: state.currentTab == 2 && state.securitySubFlow == "cdd",
+                      onTap: () => navigateTo(2, securitySubFlow: "cdd"),
+                    ),
+                    _drawerSubItem(
+                      iconWidget: const Icon(Icons.credit_card_outlined, size: 18),
+                      title: "Configurar tarjetas",
+                      isSelected: state.currentTab == 2 && state.securitySubFlow == "config_tarjetas",
+                      onTap: () => navigateTo(2, securitySubFlow: "config_tarjetas"),
+                    ),
+                    _drawerSubItem(
+                      iconWidget: const Icon(Icons.contact_phone_outlined, size: 18),
+                      title: "Configurar transferencias",
+                      isSelected: state.currentTab == 2 && state.securitySubFlow == "config_transfer",
+                      onTap: () => navigateTo(2, securitySubFlow: "config_transfer"),
+                    ),
+                  ],
+                  // 10. Ubícanos
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.location_on_outlined, size: 22),
+                    title: "Ubícanos",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const UbicanosScreen()));
+                    },
+                  ),
+                  // 11. Cambiar clave de internet
+                  _drawerItem(
+                    iconWidget: const Icon(Icons.key_outlined, size: 22),
+                    title: "Cambiar clave de internet",
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangeClaveScreen()));
+                    },
+                  ),
+                ],
+              ),
+            ),
+            
+            // FOOTER ACTION
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Colors.white10, width: 1)),
+              ),
+              child: InkWell(
+                onTap: () {
+                  state.logout();
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                child: const Row(
+                  children: [
+                    Icon(Icons.logout, color: accentOrange, size: 22),
+                    SizedBox(width: 16),
+                    Text(
+                      "Cerrar Sesión",
+                      style: TextStyle(
+                        color: accentOrange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerItem({
+    required Widget iconWidget,
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final activeOrange = const Color(0xFFF25B2A);
+    return ListTile(
+      leading: Theme(
+        data: ThemeData(
+          iconTheme: IconThemeData(
+            color: isSelected ? activeOrange : Colors.grey.shade400,
+          ),
+        ),
+        child: iconWidget,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? activeOrange : Colors.grey.shade200,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          fontSize: 14,
+        ),
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    );
+  }
+
+  Widget _drawerSubItem({
+    required Widget iconWidget,
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final activeOrange = const Color(0xFFF25B2A);
+    return Padding(
+      padding: const EdgeInsets.only(left: 20.0),
+      child: ListTile(
+        leading: Theme(
+          data: ThemeData(
+            iconTheme: IconThemeData(
+              color: isSelected ? activeOrange : Colors.grey.shade500,
+            ),
+          ),
+          child: iconWidget,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? activeOrange : Colors.grey.shade300,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+        onTap: onTap,
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
+    );
+  }
+}
+
+class MiQrScreen extends StatelessWidget {
+  const MiQrScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = Provider.of<AppState>(context);
+    const brandOrange = Color(0xFFFF4D00);
+    const darkBg = Color(0xFF0C0C0C);
+
+    return Scaffold(
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: brandOrange, size: 28),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    "Mi QR",
+                    style: TextStyle(
+                      color: brandOrange,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 16),
+                      // Instruction text
+                      const Text(
+                        "Muestra tu QR para recibir pagos o transferencias sin necesidad de brindar tu número celular",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+
+                      // QR Code Container
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.network(
+                            "https://lh3.googleusercontent.com/aida-public/AB6AXuAoq7UdRRmZGJH3viqYBeMK2FtKkaRa1hntRre1p2iODVTPUX2Cf_SGvqrAR_QihEJtb0P91hfCgjLoCWZtBrla5DyJiJ4F-J1h6a2l4arr_XECXu65JpmxWUq0NskSrhdT27jTVhyJAenISmGxfZSvGN9evKH9fiHrUgJYPjVfmuJB4DE_JmeA0Rbd8jEz3_DBrJo1qlcJpajJzEThbxCEJ3nNEtm921NBa7WXFBJdCdGrIpe4p0cnYGAC3ytRg5pO20qDfwYWETE",
+                            width: 240,
+                            height: 240,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 240,
+                                height: 240,
+                                color: Colors.grey[200],
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.qr_code,
+                                  size: 160,
+                                  color: Colors.black,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // User Name
+                      Text(
+                        state.name.isNotEmpty
+                            ? state.name.toUpperCase()
+                            : "CONDORI PIMENTEL DENISSE GERALDINE",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 64),
+
+                      // Action Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Compartir
+                          Column(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Compartiendo QR...")),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: brandOrange, width: 2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.share_outlined,
+                                    color: brandOrange,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                "Compartir",
+                                style: TextStyle(
+                                  color: brandOrange,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Descargar
+                          Column(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Descargando QR...")),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: brandOrange, width: 2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.download_outlined,
+                                    color: brandOrange,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                "Descargar",
+                                style: TextStyle(
+                                  color: brandOrange,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
+
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  late TextEditingController _phoneController;
+  late TextEditingController _emailController;
+  late String _selectedCarrier;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = Provider.of<AppState>(context, listen: false);
+    _phoneController = TextEditingController(text: state.phone);
+    _emailController = TextEditingController(text: state.email);
+    _selectedCarrier = state.carrier;
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      state.speak(
+        state.currentLanguage == 'ES' ? "Actualización de Datos. Aquí puede cambiar su número de celular, operador y correo electrónico." :
+        state.currentLanguage == 'QU' ? "Kikin willakuykuna. Kaypi allichay karu rimayta, chaski willakuyta." :
+        "Kikin yatiyí¤winaka. Akana askichaña kikin yatiyí¤winakama."
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = Provider.of<AppState>(context);
+    const darkBg = Color(0xFF121212);
+    const appOrange = Color(0xFFF2522E);
+    const appBorder = Color(0xFF2A2A2A);
+
+    return Scaffold(
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: appBorder, width: 1)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: appOrange, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Actualización de Datos",
+                    style: TextStyle(color: appOrange, fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  BnTextField(
+                    label: "Número Celular",
+                    placeholder: "Escribe tu celular",
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    maxLength: 9,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text("Operador Móvil", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    dropdownColor: const Color(0xFF1E1F23),
+                    value: _selectedCarrier,
+                    style: const TextStyle(color: Colors.white),
+                    items: ["Movistar", "Claro", "Entel", "Bitel"].map((c) {
+                      return DropdownMenuItem(value: c, child: Text(c));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedCarrier = val;
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: appBorder),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: appOrange),
+                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  BnTextField(
+                    label: "Correo Electrónico",
+                    placeholder: "Escribe tu email",
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 40),
+                  BnButton(
+                    text: "Guardar",
+                    onPressed: () {
+                      if (_phoneController.text.length == 9 && _emailController.text.contains("@")) {
+                        state.updateProfile(_phoneController.text, _selectedCarrier, _emailController.text);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Perfil actualizado exitosamente")),
+                        );
+                        Navigator.pop(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Por favor rellene los datos correctamente")),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class UbicanosScreen extends StatelessWidget {
+  const UbicanosScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const darkBg = Color(0xFF121212);
+    const appOrange = Color(0xFFF2522E);
+    const appBorder = Color(0xFF2A2A2A);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES' ? "Ubícanos. Aquí puede buscar agencias, cajeros y agentes MultiRed más cercanos." :
+        state.currentLanguage == 'QU' ? "Ubícanos. Mask'ay MultiRed agenciakunata otaq cajerokunata." :
+        "Ubícanos. Thaqhaña agencianaka, cajeronaka MultiRed."
+      );
+    });
+
+    return Scaffold(
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: appBorder, width: 1)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: appOrange, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Ubícanos MultiRed",
+                    style: TextStyle(color: appOrange, fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Text(
+                "Visualiza agencias, cajeros (ATM) y agentes cercanos a tu ubicación",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ),
+            Container(
+              height: 200,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade900.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: appBorder),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    left: 40, top: 50,
+                    child: Icon(Icons.location_on, color: appOrange, size: 32),
+                  ),
+                  Positioned(
+                    right: 60, top: 30,
+                    child: const Icon(Icons.location_on, color: Colors.blue, size: 32),
+                  ),
+                  Positioned(
+                    left: 90, bottom: 40,
+                    child: const Icon(Icons.location_on, color: Colors.green, size: 32),
+                  ),
+                  const Center(
+                    child: CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Colors.blue,
+                      child: Icon(Icons.my_location, size: 12, color: Colors.white),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 10, left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      color: Colors.black54,
+                      child: const Text("Av. Javier Prado Este", style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  _locationCard(
+                    icon: Icons.apartment,
+                    title: "Agencia San Isidro - BN",
+                    desc: "Av. Javier Prado Este 2499 Â· 250m",
+                    hours: "Lunes a Viernes 8:00 AM - 5:30 PM",
+                    color: appOrange,
+                  ),
+                  _locationCard(
+                    icon: Icons.atm,
+                    title: "Cajero ATM MultiRed",
+                    desc: "C.C. La Rambla - Piso 1 Â· 450m",
+                    hours: "Abierto 24 Horas",
+                    color: Colors.blue,
+                  ),
+                  _locationCard(
+                    icon: Icons.store,
+                    title: "Agente Corresponsal MultiRed - Bodega Rossi",
+                    desc: "Calle Las Begonias 340 Â· 600m",
+                    hours: "Lunes a Sábado 9:00 AM - 9:00 PM",
+                    color: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _locationCard({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required String hours,
+    required Color color,
+  }) {
+    return Card(
+      color: const Color(0xFF1E1F23),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+                  const SizedBox(height: 4),
+                  Text(desc, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  Text(hours, style: const TextStyle(fontSize: 11, color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LoanScreen extends StatefulWidget {
+  const LoanScreen({super.key});
+
+  @override
+  State<LoanScreen> createState() => _LoanScreenState();
+}
+
+class _LoanScreenState extends State<LoanScreen> {
+  double _selectedAmount = 5000;
+  int _selectedMonths = 12;
+  final double _interestRate = 0.145; // 14.5% annual
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES' ? "Préstamos MultiRed. Aquí puede simular sus cuotas mensuales y solicitar el desembolso." :
+        state.currentLanguage == 'QU' ? "Préstamos MultiRed. Kaypi simula cuotakunata." :
+        "Préstamos MultiRed. Akana simula cuotanaka."
+      );
+    });
+  }
+
+  double _calculateQuota() {
+    double r = _interestRate / 12;
+    double quota = (_selectedAmount * r) / (1 - pow(1 + r, -_selectedMonths));
+    return quota;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = Provider.of<AppState>(context);
+    const darkBg = Color(0xFF121212);
+    const appOrange = Color(0xFFF2522E);
+    const appBorder = Color(0xFF2A2A2A);
+
+    return Scaffold(
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: appBorder, width: 1)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: appOrange, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Préstamos MultiRed",
+                    style: TextStyle(color: appOrange, fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text(
+                    "¡Felicidades! Tienes un préstamo preaprobado. Simula tus cuotas aquí:",
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Monto a solicitar:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text("S/ ${_selectedAmount.toStringAsFixed(0)}", style: const TextStyle(color: appOrange, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                  Slider(
+                    value: _selectedAmount,
+                    min: 1000,
+                    max: 20000,
+                    divisions: 19,
+                    activeColor: appOrange,
+                    inactiveColor: appBorder,
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedAmount = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Plazo de pago:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text("$_selectedMonths meses", style: const TextStyle(color: appOrange, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                  Slider(
+                    value: _selectedMonths.toDouble(),
+                    min: 6,
+                    max: 36,
+                    divisions: 5,
+                    activeColor: appOrange,
+                    inactiveColor: appBorder,
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedMonths = val.round();
+                      });
+                    },
+                  ),
+                  const Divider(color: appBorder, height: 32),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1F23),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: appBorder),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Cuota mensual estimada:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70)),
+                        Text(
+                          "S/ ${_calculateQuota().toStringAsFixed(2)}",
+                          style: const TextStyle(color: appOrange, fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text("Tasa Efectiva Anual (TEA): 14.50%", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  const SizedBox(height: 40),
+                  BnButton(
+                    text: "Solicitar Desembolso",
+                    onPressed: () {
+                      state.addLoan(_selectedAmount);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Préstamo de S/ ${_selectedAmount.toStringAsFixed(2)} desembolsado en su Cuenta Ahorros")),
+                      );
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ChangeClaveScreen extends StatefulWidget {
+  const ChangeClaveScreen({super.key});
+
+  @override
+  State<ChangeClaveScreen> createState() => _ChangeClaveScreenState();
+}
+
+class _ChangeClaveScreenState extends State<ChangeClaveScreen> {
+  final _currentController = TextEditingController();
+  final _newController = TextEditingController();
+  final _confirmController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES' ? "Cambiar Clave de Internet. Ingrese su clave actual y defina su nueva clave de seis dígitos." :
+        state.currentLanguage == 'QU' ? "Llawi t'ikray. Churay mosoq llaveta." :
+        "Llavi mayjt'ayaña. Uchaña k'ilimata llavi."
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _currentController.dispose();
+    _newController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = Provider.of<AppState>(context);
+    const darkBg = Color(0xFF121212);
+    const appOrange = Color(0xFFF2522E);
+    const appBorder = Color(0xFF2A2A2A);
+
+    return Scaffold(
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: appBorder, width: 1)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: appOrange, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Cambiar Clave de Internet",
+                    style: TextStyle(color: appOrange, fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  BnTextField(
+                    label: "Clave Actual (6 dígitos)",
+                    placeholder: "******",
+                    controller: _currentController,
+                    isPassword: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                  ),
+                  const SizedBox(height: 16),
+                  BnTextField(
+                    label: "Nueva Clave (6 dígitos)",
+                    placeholder: "******",
+                    controller: _newController,
+                    isPassword: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                  ),
+                  const SizedBox(height: 16),
+                  BnTextField(
+                    label: "Confirmar Nueva Clave",
+                    placeholder: "******",
+                    controller: _confirmController,
+                    isPassword: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                  ),
+                  const SizedBox(height: 40),
+                  BnButton(
+                    text: "Cambiar Clave",
+                    onPressed: () {
+                      if (_currentController.text == state.clave &&
+                          _newController.text.length == 6 &&
+                          _newController.text == _confirmController.text) {
+                        state.changeClave(_newController.text);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Clave modificada exitosamente. íšsela en su próximo inicio de sesión")),
+                        );
+                        Navigator.pop(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Verifique que la clave actual sea correcta y las nuevas coincidan")),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ContactanosScreen extends StatelessWidget {
+  const ContactanosScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const darkBg = Color(0xFF121212);
+    const appOrange = Color(0xFFF2522E);
+    const appBorder = Color(0xFF2A2A2A);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES' ? "Contáctanos. Puede comunicarse con la línea de atención gratuita nacional las veinticuatro horas." :
+        state.currentLanguage == 'QU' ? "Contáctanos. Rimay yanapakuywan." :
+        "Contáctanos. Arukiyaña yanapawimpi."
+      );
+    });
+
+    return Scaffold(
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: appBorder, width: 1)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: appOrange, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Contáctanos BN",
+                    style: TextStyle(color: appOrange, fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const SizedBox(height: 20),
+                  const Icon(Icons.headset_mic, size: 64, color: appOrange),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Nuestros asesores están disponibles las 24 horas del día, los 7 días de la semana para ayudarte.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.4),
+                  ),
+                  const SizedBox(height: 40),
+                  Card(
+                    color: const Color(0xFF1E1F23),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      leading: const Icon(Icons.phone, color: Colors.green, size: 28),
+                      title: const Text("Línea Gratuita Nacional", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+                      subtitle: const Text("0-800-10-700", style: TextStyle(fontSize: 13, color: Colors.grey)),
+                      trailing: const Icon(Icons.call, color: Colors.greenAccent),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Llamando a Línea Gratuita: 0-800-10-700...")),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// INDEPENDENT OPERATION SCREENS (drawer â†’ full-screen, isolated navigation)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// Shared constants for operation screens
+const _opBg = Color(0xFF121212);
+const _opOrange = Color(0xFFF2522E);
+const _opBorder = Color(0xFF2A2A2A);
+
+/// Reusable header for operation screens
+Widget _opHeader(BuildContext context, String title) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: _opBorder, width: 1)),
+    ),
+    child: Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back, color: _opOrange, size: 28),
+          onPressed: () => Navigator.pop(context),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(color: _opOrange, fontSize: 20, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// â”€â”€ 1. TRANSFERIR POR CELULAR O QR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class TransferCellularScreen extends StatefulWidget {
+  const TransferCellularScreen({super.key});
+  @override
+  State<TransferCellularScreen> createState() => _TransferCellularScreenState();
+}
+
+class _TransferCellularScreenState extends State<TransferCellularScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES'
+            ? "Transferir por Celular o QR. Ingrese el número de celular o escanee el QR del destinatario. El monto máximo gratuito es de quinientos soles."
+            : state.currentLanguage == 'QU'
+                ? "Celular o QR nisqapi qollqe apachiy. Apachiy celular numeroniyoj."
+                : "Celular o QR nayra qullqi apachiri. Uchaña celular nayra.",
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _opBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _opHeader(context, "Transferir por Celular o QR"),
+            const Expanded(child: TransferCellularFlow()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€ 2. TRANSFERIR A CUENTAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/// Shows a sub-menu: BN, Interbancaria, Pago Tarjeta Crédito
+class TransferAccountsScreen extends StatefulWidget {
+  const TransferAccountsScreen({super.key});
+  @override
+  State<TransferAccountsScreen> createState() => _TransferAccountsScreenState();
+}
+
+class _TransferAccountsScreenState extends State<TransferAccountsScreen> {
+  String? _subFlow; // null = menu, 'bn' | 'inter' | 'tc'
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES'
+            ? "Transferir a Cuentas. Elija transferencia al mismo banco, transferencia interbancaria por CCI, o pago de tarjeta de crédito."
+            : state.currentLanguage == 'QU'
+                ? "Cuenta nisqaman qollqe apachiy. Akllay banco ukupi o interbancario."
+                : "Cuenta nayra qullqi apachiri. Akaña banco ukana o interbancario.",
+      );
+    });
+  }
+
+  Widget _subMenuTile({required IconData icon, required String title, required String desc, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: _opBorder, width: 1)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: _opOrange, size: 26),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // If a sub-flow is active, show it with its own back button
+    if (_subFlow != null) {
+      Widget flow;
+      String subTitle;
+      switch (_subFlow) {
+        case 'bn':
+          flow = const TransferSameBankFlow();
+          subTitle = "Transferencia Mismo Banco (BN)";
+          break;
+        case 'inter':
+          flow = const TransferInterbankFlow();
+          subTitle = "Transferencia Interbancaria";
+          break;
+        case 'tc':
+          flow = const PayCreditCardFlow();
+          subTitle = "Pago de Tarjeta de Crédito";
+          break;
+        default:
+          flow = const SizedBox();
+          subTitle = "";
+      }
+
+      return Scaffold(
+        backgroundColor: _opBg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: _opBorder, width: 1)),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: _opOrange, size: 28),
+                      onPressed: () => setState(() => _subFlow = null),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(subTitle,
+                          style: const TextStyle(color: _opOrange, fontSize: 18, fontWeight: FontWeight.w500)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: flow),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Main menu
+    return Scaffold(
+      backgroundColor: _opBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _opHeader(context, "Transferir a Cuentas"),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "Seleccione el tipo de transferencia que desea realizar",
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _subMenuTile(
+              icon: Icons.account_balance,
+              title: "A Cuentas Mismo Banco (BN)",
+              desc: "Transfiere a cuentas del Banco de la Nación",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Transferencia al mismo banco. Ingrese la cuenta destino BN, el monto y el concepto.");
+                setState(() => _subFlow = 'bn');
+              },
+            ),
+            _subMenuTile(
+              icon: Icons.account_balance_wallet_outlined,
+              title: "Transferencias Interbancarias",
+              desc: "Inmediatas o diferidas por CCI a otros bancos",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Transferencia interbancaria. Ingrese el CCI de veinte dígitos, nombre del beneficiario y monto.");
+                setState(() => _subFlow = 'inter');
+              },
+            ),
+            _subMenuTile(
+              icon: Icons.credit_card,
+              title: "Pago de Tarjeta de Crédito",
+              desc: "Paga tarjetas de crédito de otros bancos",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Pago de tarjeta de crédito. Seleccione el banco, ingrese el número de tarjeta y el monto a pagar.");
+                setState(() => _subFlow = 'tc');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€ 3. GIROS MULTIRED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class GirosScreen extends StatefulWidget {
+  const GirosScreen({super.key});
+  @override
+  State<GirosScreen> createState() => _GirosScreenState();
+}
+
+class _GirosScreenState extends State<GirosScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES'
+            ? "Giros MultiRed. Emite un giro desde cuatro hasta mil soles. La tarifa es fija de tres soles. Ingrese el DNI, nombre del destinatario y el monto."
+            : state.currentLanguage == 'QU'
+                ? "Giro MultiRed. Qollqe apachiy. Qollqe rantin kimsa sol."
+                : "Giro MultiRed. Qullqi apachiri. Kimsa sol rantin.",
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _opBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _opHeader(context, "Giros MultiRed"),
+            const Expanded(child: EmitGiroFlow()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€ 4. PAGOS Y RECARGAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/// Shows a sub-menu: Agua, Luz, Teléfono/Cable, Recargas de Celular
+class PagosRecargasScreen extends StatefulWidget {
+  const PagosRecargasScreen({super.key});
+  @override
+  State<PagosRecargasScreen> createState() => _PagosRecargasScreenState();
+}
+
+class _PagosRecargasScreenState extends State<PagosRecargasScreen> {
+  String? _subFlow; // null = menu, 'water' | 'electricity' | 'phone' | 'recharge'
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES'
+            ? "Pagos y Recargas. Puede pagar servicios de agua, luz, telefonía y cable, o recargar el saldo de su celular."
+            : state.currentLanguage == 'QU'
+                ? "Pagos y Recargas. Paray unu, luz, telefono o celular recarga."
+                : "Pagos y Recargas. Paga una, luz, telefono o celular recarga.",
+      );
+    });
+  }
+
+  Widget _subMenuTile({required IconData icon, required Color iconColor, required String title, required String desc, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: _opBorder, width: 1)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 26),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Sub-flow active
+    if (_subFlow != null) {
+      Widget flow;
+      String subTitle;
+      switch (_subFlow) {
+        case 'water':
+          flow = const PayServiceFlow(serviceType: "Agua");
+          subTitle = "Pago de Agua";
+          break;
+        case 'electricity':
+          flow = const PayServiceFlow(serviceType: "Luz");
+          subTitle = "Pago de Luz";
+          break;
+        case 'phone':
+          flow = const PayServiceFlow(serviceType: "Teléfono");
+          subTitle = "Pago de Telefonía y Cable";
+          break;
+        case 'recharge':
+          flow = const RechargeFlow();
+          subTitle = "Recarga de Celular";
+          break;
+        default:
+          flow = const SizedBox();
+          subTitle = "";
+      }
+
+      return Scaffold(
+        backgroundColor: _opBg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: _opBorder, width: 1)),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: _opOrange, size: 28),
+                      onPressed: () => setState(() => _subFlow = null),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(subTitle,
+                          style: const TextStyle(color: _opOrange, fontSize: 18, fontWeight: FontWeight.w500)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: flow),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Main menu
+    return Scaffold(
+      backgroundColor: _opBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _opHeader(context, "Pagos y Recargas"),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "Seleccione el servicio que desea pagar o recargar",
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _subMenuTile(
+              icon: Icons.water_drop_outlined,
+              iconColor: Colors.blue,
+              title: "Pago de Agua",
+              desc: "Sedapal, Sedalib y otras EPS",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Pago de agua. Ingrese su código de suministro y el monto a pagar.");
+                setState(() => _subFlow = 'water');
+              },
+            ),
+            _subMenuTile(
+              icon: Icons.bolt,
+              iconColor: Colors.amber,
+              title: "Pago de Luz",
+              desc: "Enel, Luz del Sur, Electrocentro y más",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Pago de luz. Ingrese su código de suministro y el monto a pagar.");
+                setState(() => _subFlow = 'electricity');
+              },
+            ),
+            _subMenuTile(
+              icon: Icons.phone,
+              iconColor: Colors.teal,
+              title: "Telefonía y Cable",
+              desc: "Movistar, Claro, Win, Entel fijo",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Pago de telefonía y cable. Ingrese su código de cliente y el monto.");
+                setState(() => _subFlow = 'phone');
+              },
+            ),
+            _subMenuTile(
+              icon: Icons.smartphone,
+              iconColor: Colors.green,
+              title: "Recargas de Celular",
+              desc: "Claro, Movistar, Entel, Bitel al instante",
+              onTap: () {
+                final state = Provider.of<AppState>(context, listen: false);
+                state.speak("Recarga de celular. Seleccione el operador, ingrese el número y elija el monto de recarga.");
+                setState(() => _subFlow = 'recharge');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€ 5. RETIRO SIN TARJETA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class RetiroSinTarjetaScreen extends StatefulWidget {
+  const RetiroSinTarjetaScreen({super.key});
+  @override
+  State<RetiroSinTarjetaScreen> createState() => _RetiroSinTarjetaScreenState();
+}
+
+class _RetiroSinTarjetaScreenState extends State<RetiroSinTarjetaScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES'
+            ? "Retiro sin Tarjeta. Genere un código de retiro válido por diez minutos para retirar efectivo en cualquier cajero MultiRed sin usar su tarjeta."
+            : state.currentLanguage == 'QU'
+                ? "Tarjeta illajpi qollqe orqoy. Codigo churay diez minutospi cajero MultiRedpi."
+                : "Tarjeta janiwa qullqi oraqaña. Codigo uchaña diez minuto cajero MultiRedpi.",
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _opBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _opHeader(context, "Retiro sin Tarjeta"),
+            const Expanded(child: CardlessWithdrawalFlow()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 12. PLANES SOCIALES ───────────────────────────────────────────
+class SocialPlansScreen extends StatefulWidget {
+  const SocialPlansScreen({super.key});
+  @override
+  State<SocialPlansScreen> createState() => _SocialPlansScreenState();
+}
+
+class _SocialPlansScreenState extends State<SocialPlansScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.speak(
+        state.currentLanguage == 'ES'
+            ? 'Sección de Planes Sociales y Bonos. Aquí puedes ver tus próximos ingresos programados.'
+            : state.currentLanguage == 'QU'
+                ? 'Bonos qollqe. Kaypi qaway proximos bonos.'
+                : 'Bono yatiyäwi. Uñjaña jutiri bonos.'
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0F1F5),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _opHeader(context, 'Planes Sociales y Bonos'),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text('Próximos ingresos programados', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Pensión 65', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFC8102E))),
+                        const SizedBox(height: 8),
+                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Text('Monto a recibir:', style: TextStyle(color: Colors.grey)), Text('S/ 250.00', style: TextStyle(fontWeight: FontWeight.bold))]),
+                        const SizedBox(height: 4),
+                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Text('Fecha estimada:', style: TextStyle(color: Colors.grey)), Text('20/07/2026', style: TextStyle(fontWeight: FontWeight.bold))]),
+                        const SizedBox(height: 12),
+                        ElevatedButton(onPressed: (){}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC8102E), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Center(child: Text('Ver cronograma', style: TextStyle(color: Colors.white)))),
+                      ]
+                    )
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Bono Yanapay (Finalizado)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)),
+                        const SizedBox(height: 8),
+                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Text('Monto cobrado:', style: TextStyle(color: Colors.grey)), Text('S/ 350.00', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey))]),
+                        const SizedBox(height: 4),
+                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Text('Fecha de cobro:', style: TextStyle(color: Colors.grey)), Text('10/05/2024', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey))]),
+                      ]
+                    )
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

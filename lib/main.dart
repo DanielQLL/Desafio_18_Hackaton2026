@@ -22,6 +22,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Banca Móvil - Banco de la Nación',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 450),
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  spreadRadius: 5,
+                )
+              ],
+            ),
+            child: child!,
+          ),
+        );
+      },
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: const Color(0xFFC8102E),

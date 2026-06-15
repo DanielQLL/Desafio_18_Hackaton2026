@@ -8,6 +8,7 @@ class Movement {
   final double amount;
   final bool isCredit;
   final String type; // 'Soles' or 'Dolares' or 'CTS'
+  final String category;
 
   Movement({
     required this.date,
@@ -15,6 +16,7 @@ class Movement {
     required this.amount,
     required this.isCredit,
     required this.type,
+    this.category = "",
   });
 }
 
@@ -42,7 +44,7 @@ class AppState extends ChangeNotifier {
   // Authentication & Profile State
   bool isLoggedIn = false;
   String dni = "";
-  String name = "JUAN CARLOS ALVARADO";
+  String name = "CARLOS ALBERTO R.";
   String email = "j.alvarado@correo.com";
   String phone = "987654321";
   String carrier = "Movistar";
@@ -83,6 +85,64 @@ class AppState extends ChangeNotifier {
   String lastNarratedText = "";
   bool isNarrating = false;
   bool simpleModeEnabled = false;
+  int currentTab = 0;
+  String operationsFlow = "trans_bn";
+  String securitySubFlow = "menu";
+  bool showAccountDetails = false;
+
+  void setTab(int index) {
+    currentTab = index;
+
+    // Voice narration for tabs (Tab 1 is only reachable in Modo Simplificado)
+    String text = "";
+    if (index == 0) {
+      text = currentLanguage == 'ES'
+          ? "Sección Mis Cuentas. Aquí puede consultar su saldo disponible y revisar sus últimos movimientos."
+          : currentLanguage == 'QU'
+              ? "Qallariy t'aqa. Kaypi qaway qollqe churakusqaykita."
+              : "Qallta chikuru. Akana yatiñawi qullqi apxatatama.";
+    } else if (index == 2) {
+      text = currentLanguage == 'ES'
+          ? "Configuración y Seguridad. Aquí puede bloquear su tarjeta, ver su clave dinámica digital y configurar límites de transacciones."
+          : currentLanguage == 'QU'
+              ? "Waqaychay t'aqa. Kaypi tarjeta wisqayta otaq llaveta churanki."
+              : "Jark'aqaña chikuru. Akana jark'antaña tarjeta ukatxa llavi churaña.";
+    } else if (index == 3) {
+      text = currentLanguage == 'ES'
+          ? "Mi Perfil. Aquí puede actualizar sus datos personales."
+          : currentLanguage == 'QU'
+              ? "Kikin t'aqa. Kaypi allichay kikin willakuykunata."
+              : "Kikin chikuru. Akana askichaña kikin yatiyäwinaka.";
+    }
+    if (text.isNotEmpty) speak(text);
+
+    notifyListeners();
+  }
+
+  void setOperationsFlow(String flow) {
+    operationsFlow = flow;
+    notifyListeners();
+  }
+
+  void setSecuritySubFlow(String subFlow) {
+    securitySubFlow = subFlow;
+    notifyListeners();
+  }
+
+  void setShowAccountDetails(bool val) {
+    showAccountDetails = val;
+    notifyListeners();
+  }
+
+  void activateCdd() {
+    cddActivated = true;
+    notifyListeners();
+  }
+
+  void deactivateCdd() {
+    cddActivated = false;
+    notifyListeners();
+  }
 
   // Saved Contacts for quick cell transfers
   List<Map<String, String>> contacts = [
@@ -101,26 +161,18 @@ class AppState extends ChangeNotifier {
 
   // Movements (Latest 20)
   List<Movement> movements = [
-    Movement(date: "12 Jun 2026", description: "TRANSFERENCIA CELULAR YAPE A: Maria Fe Romero", amount: 50.00, isCredit: false, type: "Soles"),
-    Movement(date: "11 Jun 2026", description: "RECARGA CELULAR MOVISTAR 987654321", amount: 20.00, isCredit: false, type: "Soles"),
-    Movement(date: "10 Jun 2026", description: "ABONO DE HABERES ESTADO PERUANO", amount: 2500.00, isCredit: true, type: "Soles"),
-    Movement(date: "09 Jun 2026", description: "PAGO SERVICIO ENEL COD. 998273", amount: 124.50, isCredit: false, type: "Soles"),
-    Movement(date: "08 Jun 2026", description: "TRANSFERENCIA RECIBIDA PLIN DE: Carlos Gomez", amount: 100.00, isCredit: true, type: "Soles"),
-    Movement(date: "05 Jun 2026", description: "INTERESES GANADOS AHORROS", amount: 2.40, isCredit: true, type: "Soles"),
-    Movement(date: "01 Jun 2026", description: "PAGO SERVICIO SEDAPAL COD. 129038", amount: 45.80, isCredit: false, type: "Soles"),
-    Movement(date: "30 May 2026", description: "DEPOSITO EN EFECTIVO AGENTE MULTIRED", amount: 300.00, isCredit: true, type: "Soles"),
-    Movement(date: "28 May 2026", description: "COMPRA INTERNET NETFLIX", amount: 44.90, isCredit: false, type: "Soles"),
-    Movement(date: "25 May 2026", description: "CUOTA PRESTAMO MULTIRED", amount: 385.50, isCredit: false, type: "Soles"),
-    Movement(date: "24 May 2026", description: "ABONO CTS COMPENSACION", amount: 450.00, isCredit: true, type: "CTS"),
-    Movement(date: "20 May 2026", description: "COMPRA INTERNET SPOTIFY", amount: 20.90, isCredit: false, type: "Soles"),
-    Movement(date: "18 May 2026", description: "PAGO TARJETA DE CREDITO BCP", amount: 180.00, isCredit: false, type: "Soles"),
-    Movement(date: "15 May 2026", description: "RETIRO CAJERO MULTIRED", amount: 200.00, isCredit: false, type: "Soles"),
-    Movement(date: "10 May 2026", description: "ABONO DE HABERES ESTADO PERUANO", amount: 2500.00, isCredit: true, type: "Soles"),
-    Movement(date: "08 May 2026", description: "COMPRA SUPERMERCADOS METRO", amount: 154.20, isCredit: false, type: "Soles"),
-    Movement(date: "05 May 2026", description: "INTERESES CTS", amount: 35.80, isCredit: true, type: "CTS"),
-    Movement(date: "01 May 2026", description: "TRANSFERENCIA CELULAR A: Luis Perez", amount: 40.00, isCredit: false, type: "Soles"),
-    Movement(date: "28 Abr 2026", description: "PAGO CLARO HOGAR", amount: 109.00, isCredit: false, type: "Soles"),
-    Movement(date: "25 Abr 2026", description: "CUOTA PRESTAMO MULTIRED", amount: 385.50, isCredit: false, type: "Soles"),
+    Movement(date: "12/06/2026", description: "NETFLIX SUBSCRIPTION", amount: 45.90, isCredit: false, type: "Soles", category: "ENTRETENIMIENTO"),
+    Movement(date: "11/06/2026", description: "STARBUCKS COFFEE", amount: 18.50, isCredit: false, type: "Soles", category: "RESTAURANTES"),
+    Movement(date: "10/06/2026", description: "TRANSFERENCIA RECIBIDA", amount: 1200.00, isCredit: true, type: "Soles", category: "DE: JUAN PEREZ"),
+    Movement(date: "09/06/2026", description: "REPSOL GAS STATION", amount: 120.00, isCredit: false, type: "Soles", category: "COMBUSTIBLE"),
+    Movement(date: "08/06/2026", description: "SUPERMERCADOS WONG", amount: 342.15, isCredit: false, type: "Soles", category: "COMPRAS"),
+    Movement(date: "07/06/2026", description: "DEPOSITO CAJERO", amount: 500.00, isCredit: true, type: "Soles", category: ""),
+    
+    // Older fallback movements
+    Movement(date: "05/06/2026", description: "INTERESES GANADOS AHORROS", amount: 2.40, isCredit: true, type: "Soles", category: ""),
+    Movement(date: "01/06/2026", description: "PAGO SERVICIO SEDAPAL COD. 129038", amount: 45.80, isCredit: false, type: "Soles", category: "SERVICIOS"),
+    Movement(date: "30/05/2026", description: "DEPOSITO EN EFECTIVO AGENTE MULTIRED", amount: 300.00, isCredit: true, type: "Soles", category: ""),
+    Movement(date: "24/05/2026", description: "ABONO CTS COMPENSACION", amount: 450.00, isCredit: true, type: "CTS", category: ""),
   ];
 
   // Active Giros
@@ -322,10 +374,10 @@ class AppState extends ChangeNotifier {
     simpleModeEnabled = !simpleModeEnabled;
     String text = "";
     if (simpleModeEnabled) {
-      text = currentLanguage == 'ES' ? "Modo simplificado activado" :
+      text = currentLanguage == 'ES' ? "Vista de Adulto Mayor activada" :
              currentLanguage == 'QU' ? "Huklla ruraykuna kawsarisqa" : "Modo simple nukt'ayata";
     } else {
-      text = currentLanguage == 'ES' ? "Modo simplificado desactivado" :
+      text = currentLanguage == 'ES' ? "Vista normal activada" :
              currentLanguage == 'QU' ? "Huklla ruraykuna wañuchisqa" : "Modo simple jiwt'ayata";
     }
     speak(text, force: true);
@@ -372,7 +424,11 @@ class AppState extends ChangeNotifier {
     isNarrating = true;
     notifyListeners();
 
-    SpeechHelper.speak(text);
+    String ttsLang = 'es-PE';
+    if (currentLanguage == 'QU') ttsLang = 'qu-PE';
+    if (currentLanguage == 'AY') ttsLang = 'ay-PE';
+    
+    SpeechHelper.speak(text, lang: ttsLang);
 
     // Hide animation after 4 seconds
     Future.delayed(const Duration(seconds: 4), () {
@@ -383,11 +439,20 @@ class AppState extends ChangeNotifier {
     });
   }
 
+  /// Stops current TTS playback (called before voice recognition starts)
+  Future<void> stopSpeak() async {
+    await SpeechHelper.stop();
+    isNarrating = false;
+    notifyListeners();
+  }
+
   // Login
   bool login(String enteredDni, String enteredClave) {
     if (enteredDni.length == 8 && enteredClave == clave) {
       dni = enteredDni;
       isLoggedIn = true;
+      currentTab = 0;
+      operationsFlow = "trans_bn";
       speak("Inicio de sesión exitoso. Bienvenido a su banca móvil.");
       notifyListeners();
       return true;
@@ -398,6 +463,8 @@ class AppState extends ChangeNotifier {
   // Logout
   void logout() {
     isLoggedIn = false;
+    currentTab = 0;
+    operationsFlow = "trans_bn";
     speak("Sesión cerrada correctamente.");
     notifyListeners();
   }

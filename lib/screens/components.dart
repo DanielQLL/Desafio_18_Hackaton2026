@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/app_state.dart';
 
@@ -558,7 +558,7 @@ class AccessibilityFloatingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
     return Positioned(
-      bottom: 80,
+      bottom: 86,
       right: 16,
       child: FloatingActionButton(
         mini: true,
