@@ -390,9 +390,13 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
 
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTapDown: (_) => _startListening(),
-          onTapUp: (_) => _stopListening(),
-          onTapCancel: () => _stopListening(),
+          onTap: () {
+            if (_isListening) {
+              _stopListening();
+            } else {
+              _startListening();
+            }
+          },
           child: AnimatedBuilder(
             animation: _pulseAnimation,
             builder: (_, child) {
