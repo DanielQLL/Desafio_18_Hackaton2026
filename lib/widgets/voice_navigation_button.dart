@@ -121,6 +121,7 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
   void _onSpeechStatus(String status) {
     dev.log('Speech status: $status');
     if (mounted) {
+      setState(() => _statusText = 'Estado: $status'); // Show status in UI
       if (status == SpeechToText.listeningStatus) {
         setState(() => _isListening = true);
       } else if (status == SpeechToText.doneStatus || status == SpeechToText.notListeningStatus) {
@@ -181,7 +182,7 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
         }
       },
       // localeId: 'es-US', // Removed to let the browser use its native default, avoiding "network" errors
-      partialResults: false, // Turn off partial to see if final works better on web
+      partialResults: true,
       cancelOnError: true,
     );
   }
