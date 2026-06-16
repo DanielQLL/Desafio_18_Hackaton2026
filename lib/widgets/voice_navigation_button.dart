@@ -6,6 +6,7 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import '../models/app_state.dart';
 import '../services/voice_navigation_service.dart';
 import '../screens/dashboard_screen.dart';
+import '../main.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VOICE NAVIGATION BUTTON
@@ -26,7 +27,6 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
   bool _isListening = false;
   bool _isInitialized = false;
   bool _isInitializing = false;
-  bool _isProcessing = false;
   String _lastWords = '';
   String _statusText = '';
   String? _errorText;
@@ -198,11 +198,15 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
     if (_lastWords.isNotEmpty) _processResult(_lastWords);
   }
 
+  static bool _isProcessing = false;
+  static DateTime? _lastNavigatedTime;
+
   Future<void> _processResult(String words) async {
     if (_isProcessing || words.isEmpty) return;
+    _isProcessing = true;
+    
     if (mounted) {
       setState(() {
-        _isProcessing = true;
         _statusText = 'Procesando: "$words"';
         _lastWords = ''; // Clear to prevent double processing
       });
@@ -213,7 +217,10 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
     final result = await VoiceNavigationService.resolve(words, state.currentLanguage);
     dev.log('Voice resolved to: ${result.destination} (AI=${result.usedAI})');
 
-    if (!mounted) return;
+    if (!mounted) {
+      _isProcessing = false;
+      return;
+    }
 
     final msg = result.confirmationMessage.isNotEmpty
         ? result.confirmationMessage
@@ -224,24 +231,35 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
     // Always speak feedback, even if TTS is off (force=true)
     state.speak(msg, force: true);
 
-    if (mounted) setState(() => _isProcessing = false);
+    if (mounted) setState(() => _statusText = 'Redirigiendo...');
 
     await Future.delayed(const Duration(milliseconds: 500));
+    
+    _isProcessing = false;
     if (!mounted) return;
 
-    _navigate(result.destination, state);
+    _navigate(result.destination, context, state);
   }
 
-  DateTime? _lastNavigatedTime;
+  void _popToDashboard() {
+    if (appNavigatorKey.currentState != null) {
+      appNavigatorKey.currentState!.popUntil((route) => route.isFirst || route.settings.name == '/dashboard');
+    } else {
+      Navigator.popUntil(context, (route) => route.isFirst || route.settings.name == '/dashboard');
+    }
+  }
 
-  void _navigate(VoiceDestination dest, AppState state) {
-    if (_lastNavigatedTime != null && DateTime.now().difference(_lastNavigatedTime!).inMilliseconds < 1500) {
+  void _navigate(VoiceDestination dest, BuildContext context, AppState state) {
+    // Basic debounce
+    if (_lastNavigatedTime != null && DateTime.now().difference(_lastNavigatedTime!).inMilliseconds < 2500) {
       dev.log('Navigation debounced (too fast)');
       return;
     }
     _lastNavigatedTime = DateTime.now();
 
     final ctx = context;
+    _popToDashboard(); // Always return to base dashboard before navigating via voice
+    
     switch (dest) {
       case VoiceDestination.home:
         state.setTab(0);
@@ -294,7 +312,11 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
   }
 
   void _push(BuildContext ctx, Widget screen) {
-    Navigator.push(ctx, MaterialPageRoute(builder: (_) => screen));
+    if (appNavigatorKey.currentState != null) {
+      appNavigatorKey.currentState!.push(MaterialPageRoute(builder: (_) => screen));
+    } else {
+      Navigator.push(ctx, MaterialPageRoute(builder: (_) => screen));
+    }
   }
 
   void _showSnack(String msg) {
@@ -312,8 +334,8 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
     // Show spinner while initializing
     if (_isInitializing) {
       return Container(
-        width: 58,
-        height: 58,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: const Color(0xFF2A2B30),
@@ -321,8 +343,8 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
         ),
         child: const Center(
           child: SizedBox(
-            width: 22,
-            height: 22,
+            width: 20,
+            height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: Color(0xFFF2522E),
@@ -410,8 +432,8 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
               );
             },
             child: Container(
-              width: 58,
-              height: 58,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -443,16 +465,16 @@ class _VoiceNavigationButtonState extends State<VoiceNavigationButton>
               ),
               child: Icon(
                 _isListening
-                    ? Icons.stop_rounded
+                    ? Icons.mic
                     : !_isInitialized
                         ? Icons.mic_off
-                        : Icons.mic,
+                        : Icons.mic_none,
                 color: _isListening
                     ? Colors.white
                     : !_isInitialized
-                        ? Colors.grey
+                        ? const Color(0xFF777777)
                         : const Color(0xFFF2522E),
-                size: 26,
+                size: 24,
               ),
             ),
           ),

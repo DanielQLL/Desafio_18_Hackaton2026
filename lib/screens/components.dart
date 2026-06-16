@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/app_state.dart';
+import '../main.dart'; // For appNavigatorKey
 
 // Brand colors
 const Color kBnRed = Color(0xFFC8102E);
@@ -65,7 +66,7 @@ class BnButton extends StatelessWidget {
                   Text(
                     text,
                     style: TextStyle(
-                      fontSize: 16 * state.fontSizeMultiplier,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
@@ -118,7 +119,7 @@ class _BnTextFieldState extends State<BnTextField> {
         Text(
           widget.label,
           style: TextStyle(
-            fontSize: 14 * state.fontSizeMultiplier,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: kBnTextDark,
           ),
@@ -130,10 +131,10 @@ class _BnTextFieldState extends State<BnTextField> {
           keyboardType: widget.keyboardType,
           maxLength: widget.maxLength,
           enabled: widget.enabled,
-          style: TextStyle(fontSize: 15 * state.fontSizeMultiplier),
+          style: const TextStyle(fontSize: 15),
           decoration: InputDecoration(
             hintText: widget.placeholder,
-            hintStyle: TextStyle(color: kBnTextLight, fontSize: 14 * state.fontSizeMultiplier),
+            hintStyle: const TextStyle(color: kBnTextLight, fontSize: 14),
             prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, color: kBnRed) : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
@@ -572,8 +573,9 @@ class AccessibilityFloatingButton extends StatelessWidget {
   }
 
   void _showAccessibilityOptions(BuildContext context, AppState state) {
+    final navContext = appNavigatorKey.currentContext ?? context;
     showModalBottomSheet(
-      context: context,
+      context: navContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

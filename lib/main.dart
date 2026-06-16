@@ -4,6 +4,10 @@ import 'models/app_state.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/components.dart';
+import 'widgets/voice_navigation_button.dart';
+
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(
@@ -20,6 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Banca Móvil - Banco de la Nación',
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
@@ -35,7 +40,43 @@ class MyApp extends StatelessWidget {
                 )
               ],
             ),
-            child: child!,
+            child: Consumer<AppState>(
+              builder: (context, state, _) {
+                return MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(state.fontSizeMultiplier),
+                  ),
+                  child: Stack(
+                    children: [
+                      child!,
+                      if (state.isLoggedIn)
+                        Positioned.fill(
+                          child: Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Overlay(
+                              initialEntries: [
+                                OverlayEntry(
+                                  builder: (context) => Stack(
+                                    children: [
+                                      const AccessibilityFloatingButton(),
+                                      const VoiceNarrationOverlay(),
+                                      const Positioned(
+                                        bottom: 16,
+                                        right: 16,
+                                        child: VoiceNavigationButton(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         );
       },

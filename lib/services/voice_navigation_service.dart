@@ -94,16 +94,21 @@ class VoiceNavigationService {
     // HOME / SALDOS
     if (_anyOf(text, [
       'saldo', 'cuenta', 'movimiento', 'inicio', 'home', 'principal',
-      'mis cuentas', 'mi cuenta', 'balance', 'cuanto tengo',
+      'mis cuentas', 'mi cuenta', 'balance', 'cuanto tengo', 'cuánta plata',
+      'plata', 'dinero', 'ver mi plata', 'cuánto dinero tengo', 'cuánta plata tengo',
+      'dónde veo mi saldo', 'cómo veo mi saldo', 'revisar saldo', 'ver mis cuentas',
       // Quechua / Aymara
       'qollqe', 'qallariy', 'yupay', 'uñjaña',
     ])) return VoiceDestination.home;
 
-    // TRANSFERIR POR CELULAR
+    // TRANSFERIR POR CELULAR O QR
     if (_anyOf(text, [
       'yape', 'plin', 'bcp', 'celular', 'transferir celular', 'enviar celular',
-      'transferencia celular', 'qr', 'código qr', 'escanear',
-      'transferir por celular', 'mandar al celular',
+      'transferencia celular', 'qr', 'código qr', 'escanear', 'ver mi qr',
+      'transferir por celular', 'mandar al celular', 'mostrar mi qr',
+      'cómo escaneo un qr', 'quiero pagar con qr', 'dónde veo mi qr',
+      'dónde está mi qr', 'donde esta mi qr',
+      'pasar plata por celular', 'enviar plata al celular',
       'apachiy celular', 'celular apachiri',
     ])) return VoiceDestination.transferCell;
 
@@ -112,7 +117,8 @@ class VoiceNavigationService {
       'transferir', 'transferencia', 'transferir cuenta', 'mismo banco',
       'interbancaria', 'interbancario', 'cci', 'otro banco', 'enviar dinero',
       'mandar dinero', 'transferir banco', 'pago tarjeta', 'tarjeta credito',
-      'bn transferir', 'transferir bn',
+      'bn transferir', 'transferir bn', 'pasar plata', 'enviar plata',
+      'mandar plata a cuenta', 'cómo transfiero dinero', 'quiero transferir',
       'astachiy', 'qollqe apachiy',
     ])) return VoiceDestination.transferAccounts;
 
@@ -123,20 +129,23 @@ class VoiceNavigationService {
       'teléfono', 'telefono', 'cable', 'movistar', 'claro', 'entel', 'bitel',
       'recarga', 'recargar', 'recarga celular', 'saldo celular',
       'pagar', 'pagos', 'servicio', 'servicios', 'recibos',
+      'cómo pago mi luz', 'quiero pagar el agua', 'cómo hago una recarga',
       'pagay', 'unu pagay', 'luz pagay',
     ])) return VoiceDestination.pagosRecargas;
 
     // GIROS
     if (_anyOf(text, [
       'giro', 'giros', 'multired', 'enviar giro', 'emitir giro',
-      'giro multired', 'mandar plata',
+      'giro multired', 'mandar plata por giro', 'enviar dinero a provincia',
+      'cómo mando un giro', 'quiero enviar un giro',
       'giro emitiy', 'giro luraña',
     ])) return VoiceDestination.giros;
 
     // RETIRO SIN TARJETA
     if (_anyOf(text, [
       'retiro', 'retirar', 'sin tarjeta', 'retiro sin tarjeta',
-      'código retiro', 'efectivo', 'cajero sin tarjeta',
+      'código retiro', 'efectivo', 'cajero sin tarjeta', 'sacar plata',
+      'sacar dinero', 'cómo saco plata sin tarjeta', 'quiero retirar efectivo',
       'tarjeta illajpi', 'tarjeta janiwa',
     ])) return VoiceDestination.retiroSinTarjeta;
 

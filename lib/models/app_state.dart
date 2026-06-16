@@ -93,26 +93,23 @@ class AppState extends ChangeNotifier {
   void setTab(int index) {
     currentTab = index;
 
-    // Voice narration for tabs (Tab 1 is only reachable in Modo Simplificado)
     String text = "";
     if (index == 0) {
       text = currentLanguage == 'ES'
-          ? "Sección Mis Cuentas. Aquí puede consultar su saldo disponible y revisar sus últimos movimientos."
-          : currentLanguage == 'QU'
-              ? "Qallariy t'aqa. Kaypi qaway qollqe churakusqaykita."
-              : "Qallta chikuru. Akana yatiñawi qullqi apxatatama.";
+          ? "Sección Mis Cuentas. Aquí puede consultar su saldo de ahorros, revisar sus últimos movimientos y ver su código interbancario."
+          : "Sección Mis Cuentas.";
+    } else if (index == 1) {
+      text = currentLanguage == 'ES'
+          ? "Sección Operaciones. Aquí puede hacer transferencias, pagar servicios, recargar su celular y emitir giros."
+          : "Sección Operaciones.";
     } else if (index == 2) {
       text = currentLanguage == 'ES'
-          ? "Configuración y Seguridad. Aquí puede bloquear su tarjeta, ver su clave dinámica digital y configurar límites de transacciones."
-          : currentLanguage == 'QU'
-              ? "Waqaychay t'aqa. Kaypi tarjeta wisqayta otaq llaveta churanki."
-              : "Jark'aqaña chikuru. Akana jark'antaña tarjeta ukatxa llavi churaña.";
+          ? "Configuración y Seguridad. Aquí puede bloquear su tarjeta en caso de pérdida, configurar los límites de sus transacciones y activar compras por internet."
+          : "Configuración y Seguridad.";
     } else if (index == 3) {
       text = currentLanguage == 'ES'
-          ? "Mi Perfil. Aquí puede actualizar sus datos personales."
-          : currentLanguage == 'QU'
-              ? "Kikin t'aqa. Kaypi allichay kikin willakuykunata."
-              : "Kikin chikuru. Akana askichaña kikin yatiyäwinaka.";
+          ? "Mi Perfil. Aquí puede actualizar sus datos personales, solicitar préstamos y encontrar agencias cercanas."
+          : "Mi Perfil.";
     }
     if (text.isNotEmpty) speak(text);
 
@@ -121,16 +118,36 @@ class AppState extends ChangeNotifier {
 
   void setOperationsFlow(String flow) {
     operationsFlow = flow;
+    String text = "";
+    if (flow == "trans_bn") text = "Transferencia a mismo banco. Ingrese la cuenta de destino y el monto a transferir.";
+    if (flow == "trans_cell") text = "Transferencia a celular. Seleccione su contacto y envíe dinero usando su número.";
+    if (flow == "trans_inter") text = "Transferencia interbancaria. Necesita el código de cuenta interbancario del destinatario.";
+    if (flow == "pay_water") text = "Pago de agua. Ingrese el número de suministro para pagar su recibo.";
+    if (flow == "pay_electricity") text = "Pago de luz. Ingrese el número de suministro para pagar su recibo.";
+    if (flow == "recharge") text = "Recarga de celular. Seleccione el operador e ingrese el número y monto.";
+    if (flow == "giro") text = "Emisión de giro. Ingrese el DNI y nombre de la persona que recibirá el giro.";
+    if (flow == "withdrawal") text = "Retiro sin tarjeta. Genere un código para retirar efectivo en cualquier cajero.";
+    if (text.isNotEmpty) speak(text);
     notifyListeners();
   }
 
   void setSecuritySubFlow(String subFlow) {
     securitySubFlow = subFlow;
+    String text = "";
+    if (subFlow == "bloqueo") text = "Bloqueo de tarjeta. Use esta opción si perdió o le robaron su tarjeta.";
+    if (subFlow == "cdd") text = "Clave Dinámica Digital. Esta clave cambia cada 30 segundos y sirve para confirmar sus operaciones.";
+    if (subFlow == "config_tarjetas") text = "Configurar tarjetas. Active o desactive compras por internet, en el extranjero y notificaciones.";
+    if (text.isNotEmpty) speak(text);
     notifyListeners();
   }
 
   void setShowAccountDetails(bool val) {
     showAccountDetails = val;
+    if (val) {
+       speak("Detalle de cuenta. Aquí puede ver el número de su cuenta y su código de cuenta interbancario completo, además de todos sus movimientos.");
+    } else {
+       speak("Volviendo a la pantalla de inicio.");
+    }
     notifyListeners();
   }
 
@@ -238,6 +255,21 @@ class AppState extends ChangeNotifier {
       'ES': 'Seguridad',
       'QU': 'Amachay',
       'AY': 'Jark\'aqasiña',
+    },
+    'MisCuentas': {
+      'ES': 'Mis cuentas',
+      'QU': 'Qollqeykuna',
+      'AY': 'Qullqinaka',
+    },
+    'MiPerfil': {
+      'ES': 'Mi perfil',
+      'QU': 'Kikin willakuy',
+      'AY': 'Kikin yatiyäwi',
+    },
+    'Configuracion': {
+      'ES': 'Configuración',
+      'QU': 'Allichaykuna',
+      'AY': 'Askichañanaka',
     },
     'Mas': {
       'ES': 'Más',
@@ -399,15 +431,9 @@ class AppState extends ChangeNotifier {
   void toggleTts() {
     ttsEnabled = !ttsEnabled;
     if (ttsEnabled) {
-      String extraOptionsText = "";
-      if (!isLoggedIn) {
-        extraOptionsText = t('OptionsLogin');
-      } else {
-        extraOptionsText = t('OptionsHome');
-      }
       speak(
-        (currentLanguage == 'ES' ? "Narrador de voz activado. " :
-         currentLanguage == 'QU' ? "Kuyuq rimay kawsarisqa. " : "Aru khithiri nukt'ayata. ") + extraOptionsText,
+        (currentLanguage == 'ES' ? "¡Hola! Narrador de voz activado. " :
+         currentLanguage == 'QU' ? "Allillanchu! Kuyuq rimay kawsarisqa. " : "Kamisaraki! Aru khithiri nukt'ayata. "),
         force: true
       );
     } else {
@@ -424,9 +450,10 @@ class AppState extends ChangeNotifier {
     isNarrating = true;
     notifyListeners();
 
-    String ttsLang = 'es-PE';
-    if (currentLanguage == 'QU') ttsLang = 'qu-PE';
-    if (currentLanguage == 'AY') ttsLang = 'ay-PE';
+    // Browsers typically don't have native voices for Quechua (qu) or Aymara (ay).
+    // Using a Spanish voice ('es-PE' or 'es-US') to read Quechua/Aymara text 
+    // provides a very close phonetic match and guarantees audio playback.
+    String ttsLang = 'es-PE'; 
     
     SpeechHelper.speak(text, lang: ttsLang);
 

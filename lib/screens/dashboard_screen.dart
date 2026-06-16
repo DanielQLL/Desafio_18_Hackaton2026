@@ -92,10 +92,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                       title: Text(
                         state.currentTab == 0
-                            ? "Mis cuentas"
+                            ? state.t('MisCuentas')
                             : state.currentTab == 1
-                                ? "Operaciones"
-                                : "Mi perfil",
+                                ? state.t('Operaciones')
+                                : state.currentTab == 2
+                                    ? state.t('Seguridad')
+                                    : state.t('MiPerfil'),
                         style: const TextStyle(
                           color: Color(0xFFFF4D2D),
                           fontWeight: FontWeight.bold,
@@ -173,14 +175,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               Expanded(child: state.simpleModeEnabled ? SimpleDashboardView(state: state) : tabs[state.currentTab]),
             ],
-          ),
-          const AccessibilityFloatingButton(),
-          const VoiceNarrationOverlay(),
-          // Voice navigation microphone button
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: VoiceNavigationButton(),
           ),
         ],
       )),
@@ -285,7 +279,7 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                           const SizedBox(width: 8),
                           const Text(
-                            "Mostrar el NÂº Cuenta y el CCI",
+                            "Mostrar el Nº Cuenta y el CCI",
                             style: TextStyle(
                               color: brandOrange,
                               fontSize: 13,
@@ -297,7 +291,7 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "NÂº Cuenta: ${_showFullNumbers ? state.accountNo : "**-***-**4921"}",
+                      "Nº Cuenta: ${_showFullNumbers ? state.accountNo : "**-***-**4921"}",
                       style: const TextStyle(
                         color: textMuted,
                         fontSize: 13,
@@ -306,7 +300,7 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "NÂº Cuenta Interbancario (CCI): ${_showFullNumbers ? state.cci : "***-***-*********4921-12"}",
+                      "Nº Cuenta Interbancario (CCI): ${_showFullNumbers ? state.cci : "***-***-*********4921-12"}",
                       style: const TextStyle(
                         color: textMuted,
                         fontSize: 13,
@@ -508,9 +502,9 @@ class _HomeTabState extends State<HomeTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "¡Hola!",
-                          style: TextStyle(
+                        Text(
+                          state.t('Hola') + "!",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -611,10 +605,10 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         Row(
                           children: [
-                            const Column(
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(
+                                const Text(
                                   "S/ 200.50",
                                   style: TextStyle(
                                     color: Colors.white,
@@ -624,8 +618,8 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  "SALDO DISPONIBLE",
-                                  style: TextStyle(
+                                  state.t('SaldoDisp').toUpperCase(),
+                                  style: const TextStyle(
                                     color: textMuted,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -1192,7 +1186,7 @@ class _SecurityTabState extends State<SecurityTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Â¿Está seguro de bloquear su tarjeta Multired de forma definitiva? Esta operación inhabilitará retiros y compras de inmediato.",
+                "¿Está seguro de bloquear su tarjeta Multired de forma definitiva? Esta operación inhabilitará retiros y compras de inmediato.",
                 style: TextStyle(fontSize: 13, color: Colors.white70),
               ),
               const SizedBox(height: 16),
@@ -2662,7 +2656,7 @@ class _TransferSameBankFlowState extends State<TransferSameBankFlow> {
                       {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
                       {"label": "Concepto", "value": _refController.text},
                       {"label": "Fecha y Hora", "value": DateTime.now().toString().substring(0, 19)},
-                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                      {"label": "Nº Operación", "value": (100000 + Random().nextInt(900000)).toString()},
                     ],
                   ),
                 );
@@ -2825,7 +2819,7 @@ class _TransferCellularFlowState extends State<TransferCellularFlow> {
                       {"label": "Billetera/Banco", "value": _selectedBank},
                       {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
                       {"label": "Comisión", "value": "Gratuito (TIN Especial)"},
-                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                      {"label": "Nº Operación", "value": (100000 + Random().nextInt(900000)).toString()},
                     ],
                   ),
                 );
@@ -2953,7 +2947,7 @@ class _TransferInterbankFlowState extends State<TransferInterbankFlow> {
                       {"label": "Monto", "value": "S/ ${amount.toStringAsFixed(2)}"},
                       {"label": "Modalidad", "value": _isInmediate ? "Inmediata" : "Diferida"},
                       {"label": "Comisión", "value": _isInmediate ? "S/ 3.50" : (amount <= 500 ? "Gratis" : "S/ 1.50")},
-                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                      {"label": "Nº Operación", "value": (100000 + Random().nextInt(900000)).toString()},
                     ],
                   ),
                 );
@@ -3054,10 +3048,10 @@ class _PayCreditCardFlowState extends State<PayCreditCardFlow> {
                     title: "Pago de Tarjeta de Crédito",
                     receiptDetails: [
                       {"label": "Banco", "value": _selectedBank},
-                      {"label": "NÂ° Tarjeta", "value": "**** **** **** ${_cardNoController.text.substring(12)}"},
+                      {"label": "Nº Tarjeta", "value": "**** **** **** ${_cardNoController.text.substring(12)}"},
                       {"label": "Monto Pagado", "value": "S/ ${amount.toStringAsFixed(2)}"},
                       {"label": "Tipo de Pago", "value": "Inmediato"},
-                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                      {"label": "Nº Operación", "value": (100000 + Random().nextInt(900000)).toString()},
                     ],
                   ),
                 );
@@ -3236,7 +3230,7 @@ class _PayServiceFlowState extends State<PayServiceFlow> {
                         {"label": "Empresa", "value": _selectedCompany},
                         {"label": "Suministro/Cliente", "value": _supplyCodeController.text},
                         {"label": "Monto Pagado", "value": "S/ ${amount.toStringAsFixed(2)}"},
-                        {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                        {"label": "Nº Operación", "value": (100000 + Random().nextInt(900000)).toString()},
                       ],
                     ),
                   );
@@ -3362,9 +3356,9 @@ class _RechargeFlowState extends State<RechargeFlow> {
                     title: "Recarga Realizada",
                     receiptDetails: [
                       {"label": "Operador", "value": _selectedOperator},
-                      {"label": "NÂ° Celular", "value": _phoneController.text},
+                      {"label": "Nº Celular", "value": _phoneController.text},
                       {"label": "Monto Recargado", "value": "S/ ${_selectedAmount.toStringAsFixed(2)}"},
-                      {"label": "NÂ° Operación", "value": (100000 + Random().nextInt(900000)).toString()},
+                      {"label": "Nº Operación", "value": (100000 + Random().nextInt(900000)).toString()},
                     ],
                   ),
                 );
@@ -4129,7 +4123,7 @@ class _SimpleSaldosView extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "NÂ° ${state.accountNo}",
+                  "Nº ${state.accountNo}",
                   style: TextStyle(color: Colors.white70, fontSize: 13 * state.fontSizeMultiplier),
                 ),
                 const SizedBox(height: 20),
@@ -4698,7 +4692,7 @@ class MiQrScreen extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: Image.network(
-                            "https://lh3.googleusercontent.com/aida-public/AB6AXuAoq7UdRRmZGJH3viqYBeMK2FtKkaRa1hntRre1p2iODVTPUX2Cf_SGvqrAR_QihEJtb0P91hfCgjLoCWZtBrla5DyJiJ4F-J1h6a2l4arr_XECXu65JpmxWUq0NskSrhdT27jTVhyJAenISmGxfZSvGN9evKH9fiHrUgJYPjVfmuJB4DE_JmeA0Rbd8jEz3_DBrJo1qlcJpajJzEThbxCEJ3nNEtm921NBa7WXFBJdCdGrIpe4p0cnYGAC3ytRg5pO20qDfwYWETE",
+                            "https://previews.123rf.com/images/nadalbg/nadalbg1701/nadalbg170100088/70157015-simple-qr-code.jpg",
                             width: 240,
                             height: 240,
                             fit: BoxFit.contain,
